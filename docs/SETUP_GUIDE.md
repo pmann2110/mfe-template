@@ -1,0 +1,254 @@
+# Microfrontends Module Federation - Setup Guide
+
+## Overview
+This guide provides step-by-step instructions for setting up the Microfrontends Module Federation project for development and production environments.
+
+---
+
+## Prerequisites
+
+### System Requirements
+- Node.js v18+ (LTS recommended)
+- pnpm v8+ (package manager)
+- Git
+- Operating System: macOS, Linux, or Windows (WSL recommended for Windows)
+
+### Required Tools
+- VSCode (recommended IDE)
+- Docker (for containerized development, optional)
+- Vercel CLI (for deployment, optional)
+
+---
+
+## Installation
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/your-org/mfe-module-federation.git
+cd mfe-module-federation
+```
+
+### 2. Install Dependencies
+```bash
+# Install pnpm if not already installed
+npm install -g pnpm
+
+# Install project dependencies
+pnpm install
+```
+
+### 3. Set Up Environment Variables
+Copy the example environment files and configure them:
+
+```bash
+# For admin-shell
+cp apps/admin-shell/.env.example apps/admin-shell/.env.local
+
+# For web-shell
+cp apps/web-shell/.env.example apps/web-shell/.env.local
+
+# For products-remote
+cp apps/products-remote/.env.example apps/products-remote/.env.local
+
+# For users-remote
+cp apps/users-remote/.env.example apps/users-remote/.env.local
+```
+
+Configure the environment variables according to your setup. Key variables include:
+- `NEXTAUTH_URL`: Base URL for NextAuth.js
+- `NEXTAUTH_SECRET`: Secret key for NextAuth.js (generate with `openssl rand -base64 32`)
+- `API_BASE_URL`: Base URL for your backend API
+
+---
+
+## Development Workflow
+
+### Running the Development Servers
+
+The project uses Turborepo for managing the monorepo. To start all applications:
+
+```bash
+# Start all applications in development mode
+pnpm run dev
+```
+
+This will start:
+- Admin Shell: `http://localhost:3000`
+- Web Shell: `http://localhost:3001`
+- Products Remote: `http://localhost:3529`
+- Users Remote: `http://localhost:6517`
+
+### Running Individual Applications
+
+To run specific applications:
+
+```bash
+# Admin Shell
+pnpm --filter admin-shell dev
+
+# Web Shell
+pnpm --filter web-shell dev
+
+# Products Remote
+pnpm --filter products-remote dev
+
+# Users Remote
+pnpm --filter users-remote dev
+```
+
+### Building for Production
+
+```bash
+# Build all applications
+pnpm run build
+
+# Build specific application
+pnpm --filter admin-shell build
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+pnpm run test
+
+# Run tests for specific package
+pnpm --filter @repo/ui test
+```
+
+---
+
+## Project Structure
+
+```
+/
+├── apps/
+│   ├── admin-shell/          # Next.js admin dashboard shell
+│   ├── web-shell/             # Next.js web shell
+│   ├── products-remote/       # Vite-based products remote application
+│   └── users-remote/          # Vite-based users remote application
+├── packages/
+│   ├── api-contracts/         # API interfaces and data models
+│   ├── auth-core/             # Core authentication logic
+│   ├── auth-next/             # Next.js-specific authentication utilities
+│   ├── rbac/                  # Role-Based Access Control utilities
+│   ├── stores/                # Global state management
+│   ├── ts-config/             # Shared TypeScript configurations
+│   └── ui/                    # Shared UI components
+├── docs/                     # Documentation
+└── plans/                    # Project plans and analysis
+```
+
+---
+
+## Development Best Practices
+
+### Code Style and Formatting
+- The project uses ESLint and Prettier for code formatting
+- Run formatting before committing:
+  ```bash
+  pnpm run format
+  ```
+
+### TypeScript
+- All code should be type-safe
+- Use proper TypeScript interfaces and types
+- Avoid using `any` type
+
+### Module Federation
+- Remote modules should expose their components via the `exposes` configuration
+- Shared dependencies should be marked as singletons when appropriate
+- Use the `preloadRemote` function for better performance
+
+### State Management
+- Use the global shell store for shared state
+- Avoid duplicating state across modules
+- Use Zustand for local component state when needed
+
+---
+
+## Deployment
+
+### Vercel Deployment
+
+1. Install Vercel CLI:
+   ```bash
+   npm install -g vercel
+   ```
+
+2. Link your project to Vercel:
+   ```bash
+   vercel link
+   ```
+
+3. Deploy the applications:
+   ```bash
+   # Deploy admin-shell
+   vercel --prod --scope your-team-name
+   
+   # Deploy web-shell
+   vercel --prod --scope your-team-name
+   
+   # Deploy products-remote
+   vercel --prod --scope your-team-name
+   
+   # Deploy users-remote
+   vercel --prod --scope your-team-name
+   ```
+
+### Environment Configuration for Production
+
+Ensure the following environment variables are set in your production environment:
+
+```
+NEXTAUTH_URL=https://your-domain.com
+NEXTAUTH_SECRET=your-secret-key
+API_BASE_URL=https://your-api-domain.com
+NODE_ENV=production
+```
+
+### CI/CD Configuration
+
+The project includes a GitHub Actions workflow for CI/CD. The workflow:
+- Runs tests on push to main branch
+- Builds and deploys applications on push to production branch
+- Runs linting and formatting checks
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Module Federation Loading Errors**:
+   - Ensure all remote applications are running
+   - Check the browser console for detailed error messages
+   - Verify the remote URLs in `module-federation-loader.ts`
+
+2. **Authentication Issues**:
+   - Verify the `NEXTAUTH_URL` and `NEXTAUTH_SECRET` are correctly configured
+   - Check the session management in `shell-store.ts`
+
+3. **TypeScript Errors**:
+   - Run `pnpm run type-check` to identify type errors
+   - Ensure all dependencies are properly typed
+
+4. **Build Failures**:
+   - Clear the Turborepo cache: `pnpm run clean`
+   - Reinstall dependencies: `pnpm install`
+
+---
+
+## Additional Resources
+
+- [Module Federation Documentation](https://module-federation.io/)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Vite Documentation](https://vitejs.dev/)
+- [Turborepo Documentation](https://turbo.build/repo)
+- [Zustand Documentation](https://github.com/pmndrs/zustand)
+
+---
+
+## Support
+
+For issues and questions, please open a GitHub issue or contact the maintainers.

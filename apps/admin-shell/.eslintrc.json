@@ -1,0 +1,15 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "eslint-comments/require-description": "off",
+    "@typescript-eslint/no-confusing-void-expression": "off",
+    "camelcase": [
+      "error",
+      {
+        "allow": ["^UNSAFE_", "^unstable_", "^experimental_"],
+        "ignoreDestructuring": false,
+        "properties": "never"
+      }
+    ]
+  }
+}

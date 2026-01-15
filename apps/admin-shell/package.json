@@ -1,0 +1,39 @@
+{
+  "name": "admin-shell",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev --port 3001",
+    "start": "next start --port 3001",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/api-contracts": "workspace:*",
+    "@repo/auth-core": "workspace:*",
+    "@repo/auth-next": "workspace:*",
+    "@repo/rbac": "workspace:*",
+    "@repo/stores": "workspace:*",
+    "@repo/ui": "workspace:*",
+    "lucide-react": "^0.454.0",
+    "next": "^15.1.6",
+    "next-auth": "^5.0.0-beta.25",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.7",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.23",
+    "eslint-config-custom": "workspace:*",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
+    "tailwindcss-animate": "^1.0.7",
+    "ts-config": "workspace:*",
+    "typescript": "^5"
+  }
+}

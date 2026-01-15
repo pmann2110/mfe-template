@@ -1,0 +1,53 @@
+{
+  "name": "mfe-module-federation",
+  "version": "0.0.0",
+  "description": "Vercel Microfrontends Module Federation example",
+  "license": "MIT",
+  "scripts": {
+    "build": "turbo build",
+    "checks": "turbo run build lint typecheck",
+    "dev": "turbo dev",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json,jsonc}\"",
+    "lint": "turbo lint",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish",
+    "start": "turbo start",
+    "typecheck": "turbo typecheck"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx,md,json,jsonc}": [
+      "prettier --write"
+    ]
+  },
+  "prettier": "@vercel/style-guide/prettier",
+  "devDependencies": {
+    "@changesets/cli": "^2.27.10",
+    "@vercel/style-guide": "^6.0.0",
+    "cross-env": "^7.0.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.4.2",
+    "turbo": "2.5.2-canary.0",
+    "typescript": "5.7.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "path-to-regexp": "6.3.0",
+      "vite": "6.4.1",
+      "js-yaml@4.1.0": "4.1.1",
+      "cookie@0.4.0": "0.7.0",
+      "brace-expansion@1.1.11": "1.1.12",
+      "brace-expansion@2.0.1": "2.0.2",
+      "tailwindcss": "4.1.18",
+      "tailwindcss-animate": "1.0.7",
+      "@tailwindcss/postcss": "4.1.7",
+      "@tailwindcss/vite": "4"
+    }
+  },
+  "packageManager": "pnpm@9.4.0",
+  "engines": {
+    "node": "20.x",
+    "pnpm": "9.4.0"
+  }
+}
