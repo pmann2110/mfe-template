@@ -1,5 +1,4 @@
-# Microfrontends Module Federation - Source Analysis
-
+# Microfrontends Module Federation
 ## Overview
 This project is a **Vercel Microfrontends Module Federation** example. It demonstrates how to build a modular, scalable frontend architecture using **Module Federation** with **Next.js** and **Vite**. The project is structured as a monorepo managed by **Turborepo** and **pnpm**, enabling efficient development and deployment of multiple interconnected applications.
 
