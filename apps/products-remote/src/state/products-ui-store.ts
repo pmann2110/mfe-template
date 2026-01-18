@@ -40,11 +40,9 @@ export const useProductsUIStore = create<ProductsUIState>((set, get) => ({
   setLoading: (loading) => set({ loading }),
 
   openDialog: () => {
-    console.log('[products-remote][store] openDialog()');
     set({ dialogOpen: true });
   },
   closeDialog: () => {
-    console.log('[products-remote][store] closeDialog()');
     set({ dialogOpen: false });
   },
 

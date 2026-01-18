@@ -1,0 +1,40 @@
+{
+  "users": {
+    "development": {
+      "url": "http://localhost:6517/_users/remoteEntry.js",
+      "scope": "users",
+      "module": "./app"
+    },
+    "staging": {
+      "url": "https://staging-users.example.com/_users/remoteEntry.js",
+      "scope": "users",
+      "module": "./app",
+      "cssUrl": "https://staging-users.example.com/_users/assets/style.css"
+    },
+    "production": {
+      "url": "https://users.example.com/_users/remoteEntry.js",
+      "scope": "users",
+      "module": "./app",
+      "cssUrl": "https://users.example.com/_users/assets/style.css"
+    }
+  },
+  "products": {
+    "development": {
+      "url": "http://localhost:3529/_products/remoteEntry.js",
+      "scope": "products",
+      "module": "./app"
+    },
+    "staging": {
+      "url": "https://staging-products.example.com/_products/remoteEntry.js",
+      "scope": "products",
+      "module": "./app",
+      "cssUrl": "https://staging-products.example.com/_products/assets/style.css"
+    },
+    "production": {
+      "url": "https://products.example.com/_products/remoteEntry.js",
+      "scope": "products",
+      "module": "./app",
+      "cssUrl": "https://products.example.com/_products/assets/style.css"
+    }
+  }
+}

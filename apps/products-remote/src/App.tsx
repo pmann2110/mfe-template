@@ -64,18 +64,6 @@ export default function ProductsApp({ session }: ProductsAppProps) {
   const isFormValid = formData.name.trim() && formData.description.trim() && formData.price > 0;
 
   useEffect(() => {
-    console.log('[products-remote][ui] dialogOpen changed:', dialogOpen);
-  }, [dialogOpen]);
-
-  useEffect(() => {
-    console.log('[products-remote][ui] mounted', {
-      canWrite,
-      hasSession: !!session,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     loadProducts();
   }, []);
 
@@ -92,14 +80,12 @@ export default function ProductsApp({ session }: ProductsAppProps) {
   };
 
   const handleCreate = () => {
-    console.log('[products-remote][cta] handleCreate()');
     setEditingProduct(null);
     resetForm();
     openDialog();
   };
 
   const handleEdit = (product: Product) => {
-    console.log('[products-remote][cta] handleEdit()', product);
     setEditingProduct(product);
     setFormData({
       name: product.name,
@@ -110,7 +96,6 @@ export default function ProductsApp({ session }: ProductsAppProps) {
   };
 
   const handleArchive = async (id: string) => {
-    console.log('[products-remote][cta] handleArchive()', id);
     try {
       const productToArchive = products.find(p => p.id === id);
       await mockProductApi.archive(id);
@@ -126,7 +111,6 @@ export default function ProductsApp({ session }: ProductsAppProps) {
   };
 
   const handleDelete = async (id: string) => {
-    console.log('[products-remote][cta] handleDelete()', id);
     if (!confirm('Are you sure you want to delete this product?')) return;
     try {
       const productToDelete = products.find(p => p.id === id);
@@ -143,11 +127,6 @@ export default function ProductsApp({ session }: ProductsAppProps) {
   };
 
   const handleSubmit = async () => {
-    console.log('[products-remote][cta] handleSubmit()', {
-      isFormValid,
-      isEdit: !!editingProduct,
-      formData,
-    });
     if (!isFormValid) return;
     
     setIsSubmitting(true);
@@ -235,7 +214,6 @@ export default function ProductsApp({ session }: ProductsAppProps) {
         {canWrite && (
           <Button 
             onClick={() => {
-              console.log('[products-remote][click] Add Product button clicked');
               handleCreate();
             }}
             className="gap-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
@@ -394,7 +372,6 @@ export default function ProductsApp({ session }: ProductsAppProps) {
       <Dialog
         open={dialogOpen}
         onOpenChange={(open) => {
-          console.log('[products-remote][ui] Dialog onOpenChange:', open);
           return open ? openDialog() : closeDialog();
         }}
       >

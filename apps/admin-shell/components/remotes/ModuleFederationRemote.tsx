@@ -74,7 +74,7 @@ export function ModuleFederationRemote({
         setError(null);
 
         const RemoteComponent = await loadRemoteComponent(remoteName);
-        
+
         if (mounted) {
           setComponent(() => RemoteComponent);
           setIsLoading(false);

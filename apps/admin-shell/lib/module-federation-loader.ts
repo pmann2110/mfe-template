@@ -9,36 +9,53 @@ interface RemoteConfig {
   url: string;
   scope: string;
   module: string;
+  cssUrl?: string;
 }
 
 interface RemoteConfigExtended extends RemoteConfig {
   cssUrl?: string;
 }
 
-const remoteConfigs: Record<string, RemoteConfigExtended> = {
-  users: {
-    url: process.env.NODE_ENV === 'production'
-      ? 'https://users-remote.example.com/_users/remoteEntry.js'
-      : 'http://localhost:6517/_users/remoteEntry.js',
-    // In dev mode, Vite injects CSS via JS modules, so we don't need a separate CSS URL
-    cssUrl: process.env.NODE_ENV === 'production'
-      ? 'https://users-remote.example.com/_users/assets/style.css'
-      : undefined,
-    scope: 'users',
-    module: './app',
-  },
-  products: {
-    url: process.env.NODE_ENV === 'production'
-      ? 'https://products-remote.example.com/_products/remoteEntry.js'
-      : 'http://localhost:3529/_products/remoteEntry.js',
-    // In dev mode, Vite injects CSS via JS modules, so we don't need a separate CSS URL
-    cssUrl: process.env.NODE_ENV === 'production'
-      ? 'https://products-remote.example.com/_products/assets/style.css'
-      : undefined,
-    scope: 'products',
-    module: './app',
-  },
-};
+// Dynamic remote configurations loaded from external source
+let dynamicRemoteConfigs: Record<string, RemoteConfigExtended> = {};
+
+// Function to load dynamic configurations
+async function loadDynamicRemoteConfigs(): Promise<void> {
+  try {
+    // Try to load from a config file or API endpoint
+    // For now, we'll use a simple approach to fetch from a JSON file
+    const response = await fetch('/config/remote-configs.json');
+    if (response.ok) {
+      const loadedConfigs = await response.json();
+      // Extract the current environment's configuration
+      const env = process.env.NODE_ENV || 'development';
+      const envConfigs: Record<string, RemoteConfigExtended> = {};
+      
+      for (const [remoteName, remoteConfig] of Object.entries(loadedConfigs)) {
+        const configForEnv = (remoteConfig as Record<string, RemoteConfigExtended>)[env];
+        if (configForEnv) {
+          envConfigs[remoteName] = configForEnv;
+        }
+      }
+      
+      dynamicRemoteConfigs = envConfigs;
+    }
+  } catch (error) {
+    console.warn('[MF] Failed to load dynamic remote configs:', error);
+  }
+}
+
+// Merge default and dynamic configurations
+function getRemoteConfigs(): Record<string, RemoteConfigExtended> {
+  return { ...dynamicRemoteConfigs };
+}
+
+// Load dynamic configs when module is imported (client-side only)
+if (typeof window !== 'undefined') {
+  loadDynamicRemoteConfigs().catch(() => {
+    // Silently fail if dynamic config loading fails
+  });
+}
 
 // Cache for loaded remotes
 const remoteCache = new Map<string, any>();
@@ -46,6 +63,10 @@ const remoteCache = new Map<string, any>();
 const loading = new Map<string, Promise<void>>();
 // Track loaded CSS to prevent duplicates
 const loadedCss = new Set<string>();
+// Track remote container initialization per *container instance* (not per name).
+// In Vite dev, the remoteEntry module can be re-evaluated (new container object),
+// so name-based flags can incorrectly skip init and cause "Please call init first".
+const containerInitPromises = new WeakMap<RemoteContainer, Promise<void>>();
 
 function loadRemoteCSS(cssUrl: string, remoteName: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -86,11 +107,20 @@ function loadRemoteCSS(cssUrl: string, remoteName: string): Promise<void> {
 type RemoteContainer = {
   init?: (shareScope: any, initScope?: any) => void | Promise<void>;
   get?: (module: string) => Promise<() => any> | (() => any);
+  _initialized?: boolean;
+  _initializing?: boolean;
+  [key: string]: any; // Allow additional properties
 };
 
 // Cache for shared modules
 let cachedReactNs: any | null = null;
 let cachedReactDomNs: any | null = null;
+let cachedUiNs: any | null = null;
+let cachedStoresNs: any | null = null;
+
+// Workspace packages are currently versioned in-repo; keep this in sync with the
+// workspace package.json versions to satisfy federation requiredVersion checks.
+const REPO_SHARED_VERSION = '1.0.0';
 
 // Keep a stable cache-bust token for the lifetime of this page load in development.
 // This helps avoid odd first-navigation caching / partial-module evaluation issues in dev,
@@ -115,8 +145,17 @@ function initFederationRuntime(): void {
 
   const w = window as any;
 
-  // Check if already initialized to prevent re-initialization
-  if (w.__federation_runtime_init__) return;
+  // In dev/HMR, globals can exist but be stale (e.g., after dev server restart).
+  // Only skip init if the runtime wiring is actually healthy.
+  const healthy =
+    !!w.__federation_shared__?.default &&
+    !!w.__webpack_share_scopes__?.default &&
+    !!w.__FEDERATION__?.shared;
+
+  if (w.__federation_runtime_init__ && healthy) return;
+
+  // If we got here, we need to (re)initialize and repair globals.
+  w.__federation_runtime_init__ = false;
 
   // Initialize federation shared scope with pre-loaded modules
   ensureFederationShareScope();
@@ -125,23 +164,58 @@ function initFederationRuntime(): void {
   if (!w.__webpack_share_scopes__) {
     w.__webpack_share_scopes__ = {};
   }
-  if (!w.__webpack_share_scopes__.default) {
-    w.__webpack_share_scopes__.default = w.__federation_shared__.default;
+  // IMPORTANT: always point webpack's default share scope at our federation scope
+  // to avoid "present but stale" objects after HMR reconnects.
+  w.__webpack_share_scopes__.default = w.__federation_shared__.default;
+
+  // Some federation runtimes check for __FEDERATION__ global
+  if (!w.__FEDERATION__) {
+    w.__FEDERATION__ = {
+      shared: w.__federation_shared__,
+      runtime: true,
+    };
   }
+  // Ensure shared scope reference is current
+  w.__FEDERATION__.shared = w.__federation_shared__;
 
   // Mark as initialized
   w.__federation_runtime_init__ = true;
-
-  console.log('[MF] Federation runtime initialized', {
-    sharedScope: Object.keys(w.__federation_shared__.default),
-    react: !!w.__federation_shared__.default.react,
-    reactDom: !!w.__federation_shared__.default['react-dom'],
-  });
 }
 
 // Initialize federation runtime immediately when this module is imported (client-side only)
 if (typeof window !== 'undefined') {
   initFederationRuntime();
+
+  // In development, periodically check if the federation runtime is still healthy
+  // and re-initialize if it becomes stale (common after dev server restarts)
+  if (process.env.NODE_ENV === 'development') {
+    const checkInterval = setInterval(() => {
+      const w = window as any;
+      const healthy =
+        !!w.__federation_shared__?.default &&
+        !!w.__webpack_share_scopes__?.default &&
+        !!w.__FEDERATION__?.shared;
+
+      if (!w.__federation_runtime_init__ || !healthy) {
+        console.warn('[MF] Federation runtime became unhealthy, re-initializing...');
+        // More aggressive reset for development
+        try {
+          delete w.__federation_runtime_init__;
+          delete w.__webpack_share_scopes__;
+          delete w.__FEDERATION__;
+          delete w.__federation_shared__;
+        } catch {
+          // ignore
+        }
+        initFederationRuntime();
+      }
+    }, 5000); // Check every 5 seconds
+
+    // Clean up interval when page unloads
+    window.addEventListener('beforeunload', () => {
+      clearInterval(checkInterval);
+    });
+  }
 }
 
 export { initFederationRuntime };
@@ -155,7 +229,12 @@ function ensureFederationShareScope() {
 
   // Initialize webpack share scopes for compatibility
   w.__webpack_share_scopes__ = w.__webpack_share_scopes__ || {};
-  w.__webpack_share_scopes__.default = w.__webpack_share_scopes__.default || w.__federation_shared__.default;
+  // IMPORTANT: overwrite reference so it can’t stay stale after HMR
+  w.__webpack_share_scopes__.default = w.__federation_shared__.default;
+
+  // Ensure federation global exists and points at our share scope
+  w.__FEDERATION__ = w.__FEDERATION__ || {};
+  w.__FEDERATION__.shared = w.__federation_shared__;
 
   // Set up React sharing
   if (!w.__federation_shared__.default.react) {
@@ -189,7 +268,63 @@ function ensureFederationShareScope() {
     };
   }
 
+  // Set up @repo/ui sharing (singleton across host/remotes)
+  if (!w.__federation_shared__.default['@repo/ui']) {
+    w.__federation_shared__.default['@repo/ui'] = {
+      [REPO_SHARED_VERSION]: {
+        get: async () => {
+          if (!cachedUiNs) {
+            cachedUiNs = await import('@repo/ui');
+          }
+          return () => cachedUiNs;
+        },
+        loaded: false,
+        shareScope: 'default',
+      },
+    };
+  }
+
+  // Set up @repo/stores sharing (singleton across host/remotes)
+  if (!w.__federation_shared__.default['@repo/stores']) {
+    w.__federation_shared__.default['@repo/stores'] = {
+      [REPO_SHARED_VERSION]: {
+        get: async () => {
+          if (!cachedStoresNs) {
+            cachedStoresNs = await import('@repo/stores');
+          }
+          return () => cachedStoresNs;
+        },
+        loaded: false,
+        shareScope: 'default',
+      },
+    };
+  }
+
   return w.__federation_shared__.default;
+}
+
+// Helper to verify federation runtime is ready for loadShare
+function verifyFederationRuntimeReady(): boolean {
+  if (typeof window === 'undefined') return false;
+  const w = window as any;
+  
+  // Check multiple possible runtime state indicators
+  const basicReady = !!(
+    w.__federation_runtime_init__ &&
+    w.__federation_shared__?.default &&
+    (w.__webpack_share_scopes__?.default || w.__FEDERATION__?.shared)
+  );
+  
+  // Additional health checks for development/HMR scenarios
+  if (basicReady && process.env.NODE_ENV === 'development') {
+    // Check if React is properly shared (common issue after server restart)
+    const hasReact = !!w.__federation_shared__?.default?.react;
+    // Check if the share scope is properly linked
+    const shareScopeLinked = w.__webpack_share_scopes__?.default === w.__federation_shared__?.default;
+    return basicReady && hasReact && shareScopeLinked;
+  }
+  
+  return basicReady;
 }
 
 async function ensureRemoteContainerInitialized(
@@ -204,11 +339,189 @@ async function ensureRemoteContainerInitialized(
   initFederationRuntime();
   const shareScope = ensureFederationShareScope();
 
-  // Important: In Vite dev (HMR / optimized deps reload), the remote's federation
-  // runtime module may be re-evaluated (new ?v= hash), resetting its internal
-  // singleton instance. Calling container.init again is safe/idempotent and
-  // guarantees loadShare() won't throw "Please call init first".
-  await container.init(shareScope, []);
+  // Enhanced container tracking for development/HMR scenarios
+  // Check if this container instance has been initialized before
+  const existing = containerInitPromises.get(container);
+  if (existing) {
+    await existing;
+    // Verify runtime is still ready after awaiting existing init
+    if (!verifyFederationRuntimeReady()) {
+      console.warn(`[MF] Runtime not ready after existing init for ${remoteName}, re-initializing`);
+      initFederationRuntime();
+      ensureFederationShareScope();
+    }
+    // Give the runtime a moment to propagate init state after completion
+    await new Promise((r) => setTimeout(r, 0));
+    return;
+  }
+
+  // Special handling for server restart scenario in development
+  if (process.env.NODE_ENV === 'development') {
+    // Check if we have a cached container for this remote name
+    const cachedContainer = remoteCache.get(remoteName);
+    // If we have a cached container but it's a different instance, we need to clean up
+    if (cachedContainer && cachedContainer !== container) {
+      console.warn(`[MF] Detected container instance change for ${remoteName} (server restart?), forcing browser reload for clean state`);
+      // Force a hard reload to ensure completely clean state
+      // This is the most reliable way to handle server restarts in development
+      window.location.reload();
+      return; // This line will never be reached, but keeps TypeScript happy
+    }
+  }
+
+  const initPromise = (async () => {
+    try {
+      // Ensure federation runtime is fully initialized before calling container.init
+      const w = window as any;
+      if (!w.__federation_runtime_init__ || !w.__federation_shared__?.default) {
+        initFederationRuntime();
+        ensureFederationShareScope();
+      }
+
+      // The federation runtime from @module-federation/vite may check for a global
+      // federation instance. Ensure it exists and is initialized.
+      if (!w.__FEDERATION__) {
+        w.__FEDERATION__ = {};
+      }
+      if (!w.__FEDERATION__.shared) {
+        w.__FEDERATION__.shared = w.__federation_shared__;
+      }
+
+      // Call init and await it fully
+      // Note: The second parameter to init() is the initScope, which should be an array
+      // of scope names. An empty array means use the default scope.
+
+      // TypeScript check: we already verified container.init exists at function start
+      if (!container.init) {
+        throw new Error(`Remote ${remoteName} container.init is undefined`);
+      }
+      
+      // The federation runtime might expect the share scope to be passed in a specific way.
+      // Try calling init with the share scope directly, and also ensure the runtime recognizes it.
+      const initResult = container.init(shareScope, []);
+      if (initResult instanceof Promise) {
+        await initResult;
+      }
+      
+      // After init, the container should be recognized by the runtime.
+      // Some runtimes check if the container has been initialized by looking at
+      // the share scope or the container's internal state.
+      // Ensure the share scope is the same reference the runtime expects.
+      // Reuse the existing 'w' variable from the outer scope
+      if (w.__federation_shared__?.default) {
+        // Make sure the share scope we passed matches what the runtime expects
+        // The runtime might be checking if shareScope === w.__federation_shared__.default
+        if (shareScope !== w.__federation_shared__.default) {
+          console.warn(`[MF] Share scope reference mismatch for ${remoteName}, attempting to sync...`);
+          // Try to ensure they're the same object
+          Object.setPrototypeOf(shareScope, Object.getPrototypeOf(w.__federation_shared__.default));
+        }
+      }
+      
+      // Enhanced synchronization for development/HMR scenarios
+      if (process.env.NODE_ENV === 'development') {
+        // Additional synchronization to ensure runtime state is fully propagated
+        // This is critical after server restarts where the runtime may be stale
+        await new Promise((r) => setTimeout(r, 50));
+        
+        // Double-check that the runtime is still healthy after init
+        if (!verifyFederationRuntimeReady()) {
+          console.warn(`[MF] Runtime became unhealthy after init for ${remoteName}, re-synchronizing`);
+          // Force a full re-initialization of the federation runtime
+          const w = window as any;
+          try {
+            delete w.__federation_runtime_init__;
+            delete w.__webpack_share_scopes__;
+            delete w.__FEDERATION__;
+            delete w.__federation_shared__;
+          } catch {
+            // ignore
+          }
+          initFederationRuntime();
+          // Re-establish the share scope reference
+          const freshShareScope = ensureFederationShareScope();
+          // Re-call init with the fresh share scope
+          const retryInitResult = container.init(freshShareScope, []);
+          if (retryInitResult instanceof Promise) {
+            await retryInitResult;
+          }
+        }
+      }
+      
+      // After init, the federation runtime should have set up internal state.
+      // However, the runtime might need additional time to propagate this state
+      // before loadShare can be called. We need to ensure the runtime recognizes
+      // that init has been called for this specific container.
+      
+      // Wait for microtasks to complete - this ensures any async operations
+      // triggered by init() have completed
+      await new Promise((r) => setTimeout(r, 0));
+      
+      // The federation runtime might check if the share scope has been initialized.
+      // Ensure the share scope is properly linked to the container.
+      // Reuse the existing 'w' variable from the outer scope
+      if (w.__federation_shared__?.default && shareScope) {
+        // Make sure they reference the same object
+        if (w.__federation_shared__.default !== shareScope) {
+          console.warn(`[MF] Share scope mismatch for ${remoteName}, syncing...`);
+          // Sync the share scope
+          Object.assign(w.__federation_shared__.default, shareScope);
+        }
+      }
+      
+      // Additional wait to ensure runtime state is propagated
+      await new Promise((r) => setTimeout(r, 0));
+      
+      // Verify runtime is ready before proceeding
+      if (!verifyFederationRuntimeReady()) {
+        console.warn(`[MF] Runtime not ready after init for ${remoteName}, re-initializing`);
+        initFederationRuntime();
+        ensureFederationShareScope();
+        // Wait a bit more
+        await new Promise((r) => setTimeout(r, 10));
+      }
+    } catch (initError) {
+      const msg = initError instanceof Error ? initError.message : String(initError);
+
+      // Webpack containers can throw if init is called more than once; in dev we
+      // may defensively call init again when the container object is stable.
+      if (
+        msg.toLowerCase().includes('already initialized') ||
+        msg.toLowerCase().includes('container already initialized')
+      ) {
+        return;
+      }
+
+      console.error(`[MF] Failed to initialize remote ${remoteName}:`, initError);
+      throw initError;
+    }
+  })();
+
+  // Direct handling for "Please call init first" error in development
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      // Try to call container.get() to see if we get the specific error
+      if (container.get) {
+        await container.get('./app'); // Use a default module path
+      }
+    } catch (getError) {
+      const getErrMsg = getError instanceof Error ? getError.message : String(getError);
+      
+      // If we get the specific "Please call init first" error, force a reload
+      if (getErrMsg.includes('Please call init first')) {
+        console.warn(`[MF] Detected corrupted federation runtime state for ${remoteName}, forcing browser reload`);
+        // Force a hard reload to ensure completely clean state
+        window.location.reload();
+        return; // This line will never be reached, but keeps TypeScript happy
+      }
+      
+      // If it's a different error, re-throw it
+      throw getError;
+    }
+  }
+
+  containerInitPromises.set(container, initPromise);
+  await initPromise;
 }
 
 async function dynamicImportByUrl(url: string) {
@@ -246,8 +559,10 @@ async function importRemoteContainer(
     if (maybe?.get && maybe?.init) {
       return { container: maybe };
     }
+    console.warn(`[MF] Remote entry from ${url} did not expose init/get`);
     return { importErr: new Error('Remote entry did not expose init/get') };
   } catch (importErr) {
+    console.error(`[MF] Failed to import remote container from ${url}:`, importErr);
     return { importErr };
   }
 }
@@ -256,7 +571,7 @@ async function importRemoteContainer(
  * Initialize a remote module using Module Federation runtime
  */
 async function initRemote(remoteName: string, importNonce?: string): Promise<void> {
-  const config = remoteConfigs[remoteName];
+  const config = getRemoteConfigs()[remoteName];
   if (!config) {
     throw new Error(`Unknown remote: ${remoteName}`);
   }
@@ -335,17 +650,30 @@ async function initRemote(remoteName: string, importNonce?: string): Promise<voi
         remoteCache.set(remoteName, container);
         return;
       }
-      // Implement exponential backoff for retry logic
-      const maxRetries = 3;
-      const baseDelay = 1000; // 1 second
+      // Implement enhanced exponential backoff for retry logic
+      const maxRetries = 5;
+      const baseDelay = 2000; // Start with 2 seconds
+      const maxDelay = 8000; // Cap at 8 seconds
+      
       for (let attempt = 0; attempt < maxRetries; attempt++) {
-        const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
+        // Calculate delay with jitter to avoid synchronization issues
+        const delay = Math.min(
+          baseDelay * Math.pow(2, attempt) + Math.random() * 1000,
+          maxDelay
+        );
+        
         console.warn(
           `[MF] Attempt ${attempt + 1} of ${maxRetries}: Retrying to load remote ${remoteName} in ${delay}ms...`,
           err,
         );
+        
         await new Promise((r) => setTimeout(r, delay));
+        
         try {
+          // Clear any cached state before retry
+          remoteCache.delete(remoteName);
+          loading.delete(remoteName);
+          
           const container = await tryInit(Date.now().toString(36));
           remoteCache.set(remoteName, container);
           return;
@@ -377,7 +705,20 @@ async function initRemote(remoteName: string, importNonce?: string): Promise<voi
 export async function loadRemoteComponent<T = any>(
   remoteName: string
 ): Promise<T> {
-  const config = remoteConfigs[remoteName];
+
+  // Ensure federation runtime is healthy before attempting to load remotes
+  // This is critical for dev/HMR scenarios where the runtime can become stale
+  const w = window as any;
+  const healthy =
+    !!w.__federation_shared__?.default &&
+    !!w.__webpack_share_scopes__?.default &&
+    !!w.__FEDERATION__?.shared;
+
+  if (!w.__federation_runtime_init__ || !healthy) {
+    initFederationRuntime();
+  }
+
+  const config = getRemoteConfigs()[remoteName];
   if (!config) {
     throw new Error(`Unknown remote: ${remoteName}`);
   }
@@ -393,15 +734,156 @@ export async function loadRemoteComponent<T = any>(
       throw new Error(`Remote ${remoteName} not available`);
     }
 
+    // Verify this is the same container instance we initialized
+    // (in case of HMR or re-evaluation, we might have a new container)
+    const hasInitPromise = containerInitPromises.has(container);
+
     // Defensive: ensure the remote runtime is initialized (dev/HMR safe)
+    // This is critical - if the container is a new instance, we need to init it
     await ensureRemoteContainerInitialized(remoteName, container);
 
     // Ensure __tla is awaited before calling container.get
     await awaitViteTla(container);
 
-    // Get the module factory
-    const factory = await container.get(config.module);
-    const module = factory();
+    // Critical: Ensure federation runtime is fully ready before module evaluation.
+    // The remote module's top-level imports will trigger loadShare, which requires
+    // the runtime to be fully initialized. The runtime needs time to propagate
+    // the init state internally before any module code can execute.
+    const w = window as any;
+    if (w.__federation_runtime_init__ && w.__federation_shared__?.default) {
+      // Use requestAnimationFrame + setTimeout to ensure we wait for the next
+      // browser tick, giving the federation runtime time to fully propagate init state
+      await new Promise<void>((resolve) => {
+        if (typeof requestAnimationFrame !== 'undefined') {
+          requestAnimationFrame(() => {
+            setTimeout(resolve, 0);
+          });
+        } else {
+          setTimeout(resolve, 10);
+        }
+      });
+    }
+
+    // CRITICAL: Before calling container.get(), we must ensure:
+    // 1. The container has been initialized
+    // 2. The federation runtime recognizes the container as initialized
+    // 3. The share scope is properly set up
+    // 
+    // The container.get() call itself might trigger federation runtime code
+    // that checks if init has been called, so we need to be absolutely sure
+    // the init state is fully propagated.
+    
+    // Re-verify initialization one more time before get()
+    await ensureRemoteContainerInitialized(remoteName, container);
+    
+    // Additional wait to ensure the federation runtime's internal state is fully
+    // propagated. The runtime needs to recognize that init has been called
+    // before container.get() can safely be called.
+    for (let i = 0; i < 3; i++) {
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    
+    // Verify runtime is still ready
+    if (!verifyFederationRuntimeReady()) {
+      console.warn(`[MF] Runtime not ready before get() for ${remoteName}, re-initializing`);
+      initFederationRuntime();
+      ensureFederationShareScope();
+      await ensureRemoteContainerInitialized(remoteName, container);
+      await new Promise((r) => setTimeout(r, 10));
+    }
+
+    // Get the module factory - this returns the factory function but doesn't execute it yet
+    // NOTE: This call might trigger federation runtime checks, so init must be complete
+    // If it fails with "Please call init first", the container might need to be re-initialized
+    // with a fresh share scope reference
+    let factory: (() => any) | undefined;
+    try {
+      factory = await container.get(config.module);
+    } catch (getError) {
+      const getErrMsg = getError instanceof Error ? getError.message : String(getError);
+      if (getErrMsg.includes('Please call init first')) {
+        console.warn(`[MF] container.get() failed for ${remoteName}, re-initializing container...`);
+        // Clear the init promise to force a fresh init
+        containerInitPromises.delete(container);
+        // Re-initialize with fresh share scope
+        await ensureRemoteContainerInitialized(remoteName, container);
+        // Wait a bit more for state propagation
+        await new Promise((r) => setTimeout(r, 50));
+        // Try again
+        factory = await container.get(config.module);
+      } else {
+        throw getError;
+      }
+    }
+    
+    // Before evaluating the factory, ensure runtime is still ready
+    // (in case of HMR or container re-evaluation). This is critical because
+    // the factory() call will execute the module code, which will immediately
+    // try to import shared modules via loadShare.
+    await ensureRemoteContainerInitialized(remoteName, container);
+    
+    // Final wait before module evaluation
+    for (let i = 0; i < 2; i++) {
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    if (typeof requestAnimationFrame !== 'undefined') {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          setTimeout(resolve, 0);
+        });
+      });
+    }
+
+    // Now it's safe to execute the factory, which will evaluate the module code
+    // and trigger top-level imports of shared modules
+    let module: any;
+    try {
+      module = factory();
+    } catch (e) {
+      const evalMsg = e instanceof Error ? e.message : String(e);
+      // The remote's module evaluation can still hit loadShare before the runtime
+      // recognizes init (common after dev server restart + HMR reconnect).
+      if (
+        process.env.NODE_ENV !== 'production' &&
+        evalMsg.includes('Please call init first')
+      ) {
+        console.warn(
+          `[MF] factory() evaluation failed for ${remoteName}; resetting runtime and retrying once...`,
+          e,
+        );
+
+        // Clear container init state so we can re-init cleanly
+        containerInitPromises.delete(container);
+        remoteCache.delete(remoteName);
+        loading.delete(remoteName);
+
+        // Reset federation globals to force a clean re-wire
+        const w = window as any;
+        try {
+          delete w.__federation_runtime_init__;
+          delete w.__webpack_share_scopes__;
+          delete w.__FEDERATION__;
+          delete w.__federation_shared__;
+        } catch {
+          // ignore
+        }
+
+        initFederationRuntime();
+
+        // Force a fresh remoteEntry evaluation and re-init
+        await initRemote(remoteName, Date.now().toString(36));
+        const fresh = remoteCache.get(remoteName) as RemoteContainer | undefined;
+        if (!fresh?.get || !fresh?.init) {
+          throw e;
+        }
+        await ensureRemoteContainerInitialized(remoteName, fresh);
+
+        const freshFactory = await fresh.get(config.module);
+        module = freshFactory();
+      } else {
+        throw e;
+      }
+    }
 
     return (module.default || module) as T;
   };
@@ -424,12 +906,25 @@ export async function loadRemoteComponent<T = any>(
 
       // Vite MF may reload optimized deps shortly after startup; allow a few retries.
       // We force a fresh remoteEntry evaluation each time to pick up the newest deps graph.
-      const attempts = 5;
+      const attempts = 3;
+      const baseDelay = 1000; // Start with 1 second
+      const maxDelay = 10000; // Cap at 10 seconds
+      
       for (let i = 0; i < attempts; i++) {
+        // Clear all cached state before retry
         remoteCache.delete(remoteName);
         loading.delete(remoteName);
-
-        const delay = 200 + i * 250;
+        
+        // Exponential backoff with jitter
+        const delay = Math.min(
+          baseDelay * Math.pow(2, i) + Math.random() * 500,
+          maxDelay
+        );
+        
+        console.warn(
+          `[MF] ${remoteName} load retry attempt ${i + 1}/${attempts} with ${delay}ms delay...`,
+        );
+        
         await new Promise((r) => setTimeout(r, delay));
 
         try {
@@ -438,9 +933,15 @@ export async function loadRemoteComponent<T = any>(
         } catch (retryErr) {
           const retryMsg =
             retryErr instanceof Error ? retryErr.message : String(retryErr);
-          if (!retryMsg.includes('Please call init first') || i === attempts - 1) {
+          
+          if (i === attempts - 1) {
+            console.error(
+              `[MF] ${remoteName} failed after ${attempts} attempts: `,
+              retryErr,
+            );
             throw retryErr;
           }
+          
           console.warn(
             `[MF] ${remoteName} still not ready (attempt ${i + 1}/${attempts}); retrying...`,
             retryErr,
@@ -458,14 +959,12 @@ export async function loadRemoteComponent<T = any>(
 export function preloadRemote(remoteName: string): void {
   if (typeof window === 'undefined') return;
   
-  const config = remoteConfigs[remoteName];
+  const config = getRemoteConfigs()[remoteName];
   if (!config || remoteCache.has(remoteName)) return;
-
+  
   const link = document.createElement('link');
   link.rel = 'prefetch';
   link.href = config.url;
   link.as = 'script';
   document.head.appendChild(link);
-  
-  console.log(`[MF] Prefetching remote ${remoteName} from ${config.url}`);
 }

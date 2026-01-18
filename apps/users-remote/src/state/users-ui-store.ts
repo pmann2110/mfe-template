@@ -40,11 +40,9 @@ export const useUsersUIStore = create<UsersUIState>((set, get) => ({
   setLoading: (loading) => set({ loading }),
 
   openDialog: () => {
-    console.log('[users-remote][store] openDialog()');
     set({ dialogOpen: true });
   },
   closeDialog: () => {
-    console.log('[users-remote][store] closeDialog()');
     set({ dialogOpen: false });
   },
 

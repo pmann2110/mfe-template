@@ -1,6 +1,6 @@
 {
   "name": "mfe-module-federation",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Vercel Microfrontends Module Federation example",
   "license": "MIT",
   "scripts": {

@@ -27,22 +27,17 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      console.log('🔐 Attempting login with:', { email, password: '***' });
-      
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
       });
 
-      console.log('🔐 SignIn result:', result);
-
       if (result?.error) {
         console.error('❌ Login error:', result.error);
         setError('Invalid credentials. Please try again.');
         setLoading(false);
       } else if (result?.ok) {
-        console.log('✅ Login successful, redirecting...');
         // Force a full page reload to ensure session cookie is read
         window.location.href = '/admin';
       } else {

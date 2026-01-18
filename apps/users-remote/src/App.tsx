@@ -60,18 +60,6 @@ export default function UsersApp({ session }: UsersAppProps) {
   const isFormValid = formData.name.trim() && formData.email.trim() && formData.role.trim();
 
   useEffect(() => {
-    console.log('[users-remote][ui] dialogOpen changed:', dialogOpen);
-  }, [dialogOpen]);
-
-  useEffect(() => {
-    console.log('[users-remote][ui] mounted', {
-      canWrite,
-      hasSession: !!session,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
     loadUsers();
   }, []);
 
@@ -88,14 +76,12 @@ export default function UsersApp({ session }: UsersAppProps) {
   };
 
   const handleCreate = () => {
-    console.log('[users-remote][cta] handleCreate()');
     setEditingUser(null);
     resetForm();
     openDialog();
   };
 
   const handleEdit = (user: User) => {
-    console.log('[users-remote][cta] handleEdit()', user);
     setEditingUser(user);
     setFormData({
       email: user.email,
@@ -106,7 +92,6 @@ export default function UsersApp({ session }: UsersAppProps) {
   };
 
   const handleDelete = async (id: string) => {
-    console.log('[users-remote][cta] handleDelete()', id);
     if (!confirm('Are you sure you want to delete this user?')) return;
     try {
       const userToDelete = users.find(u => u.id === id);
@@ -123,11 +108,6 @@ export default function UsersApp({ session }: UsersAppProps) {
   };
 
   const handleSubmit = async () => {
-    console.log('[users-remote][cta] handleSubmit()', {
-      isFormValid,
-      isEdit: !!editingUser,
-      formData,
-    });
     if (!isFormValid) return;
     
     setIsSubmitting(true);
@@ -211,7 +191,6 @@ export default function UsersApp({ session }: UsersAppProps) {
         {canWrite && (
           <Button 
             onClick={() => {
-              console.log('[users-remote][click] Add User button clicked');
               handleCreate();
             }}
             className="gap-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
@@ -349,7 +328,6 @@ export default function UsersApp({ session }: UsersAppProps) {
       <Dialog
         open={dialogOpen}
         onOpenChange={(open) => {
-          console.log('[users-remote][ui] Dialog onOpenChange:', open);
           return open ? openDialog() : closeDialog();
         }}
       >
