@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { Button } from '@repo/ui';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@repo/ui';
-import { Bell, X, LogOut, LayoutDashboard, Users as UsersIcon, Package } from 'lucide-react';
+import { Bell, X, LogOut, LayoutDashboard, Users as UsersIcon } from 'lucide-react';
 import Link from 'next/link';
 import type { Session } from 'next-auth';
 import { initShellStore, useNotifications, useShellActions } from '@repo/stores';
@@ -48,12 +48,6 @@ export function AdminLayoutClient({
       icon: UsersIcon,
       permission: 'user:read' as const,
     },
-    {
-      path: '/admin/products',
-      label: 'Products',
-      icon: Package,
-      permission: 'product:read' as const,
-    },
   ].filter(
     (item) =>
       !item.permission ||
@@ -67,7 +61,7 @@ export function AdminLayoutClient({
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-md">
-                <Package className="h-5 w-5" />
+                <LayoutDashboard className="h-5 w-5" />
               </div>
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
@@ -78,7 +72,7 @@ export function AdminLayoutClient({
             <nav className="flex gap-2">
               {navItems.map((item) => {
                 const isActive = pathname === item.path;
-                const remoteName = item.path.includes('users') ? 'users' : item.path.includes('products') ? 'products' : null;
+                const remoteName = item.path.includes('users') ? 'users' : null;
                 const Icon = item.icon;
                 return (
                   <Link

@@ -118,67 +118,6 @@ importers:
         specifier: ^5
         version: 5.7.3
 
-  apps/products-remote:
-    dependencies:
-      '@repo/api-contracts':
-        specifier: workspace:*
-        version: link:../../packages/api-contracts
-      '@repo/auth-core':
-        specifier: workspace:*
-        version: link:../../packages/auth-core
-      '@repo/stores':
-        specifier: workspace:*
-        version: link:../../packages/stores
-      '@repo/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      react:
-        specifier: ^19.1.0
-        version: 19.1.0
-      react-dom:
-        specifier: ^19.1.0
-        version: 19.1.0(react@19.1.0)
-      zustand:
-        specifier: ^5.0.2
-        version: 5.0.9(@types/react@19.1.4)(react@19.1.0)
-    devDependencies:
-      '@module-federation/vite':
-        specifier: ^1.2.7
-        version: 1.4.0(rollup@4.41.0)
-      '@tailwindcss/postcss':
-        specifier: 4.1.7
-        version: 4.1.7
-      '@tailwindcss/vite':
-        specifier: '4'
-        version: 4.1.7(vite@6.4.1(@types/node@20.17.50)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
-      '@types/node':
-        specifier: ^20
-        version: 20.17.50
-      '@types/react':
-        specifier: ^19
-        version: 19.1.4
-      '@types/react-dom':
-        specifier: ^19
-        version: 19.1.5(@types/react@19.1.4)
-      '@vitejs/plugin-react':
-        specifier: ^4.3.4
-        version: 4.4.1(vite@6.4.1(@types/node@20.17.50)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
-      eslint-config-custom:
-        specifier: workspace:*
-        version: link:../../packages/eslint-config-custom
-      tailwindcss:
-        specifier: 4.1.18
-        version: 4.1.18
-      ts-config:
-        specifier: workspace:*
-        version: link:../../packages/ts-config
-      typescript:
-        specifier: ^5
-        version: 5.7.3
-      vite:
-        specifier: 6.4.1
-        version: 6.4.1(@types/node@20.17.50)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
-
   apps/users-remote:
     dependencies:
       '@repo/api-contracts':
@@ -187,6 +126,9 @@ importers:
       '@repo/auth-core':
         specifier: workspace:*
         version: link:../../packages/auth-core
+      '@repo/remote-utils':
+        specifier: workspace:*
+        version: link:../../packages/remote-utils
       '@repo/stores':
         specifier: workspace:*
         version: link:../../packages/stores
@@ -199,6 +141,9 @@ importers:
       react-dom:
         specifier: ^19.1.0
         version: 19.1.0(react@19.1.0)
+      react-router-dom:
+        specifier: ^7.12.0
+        version: 7.12.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       zustand:
         specifier: ^5.0.2
         version: 5.0.9(@types/react@19.1.4)(react@19.1.0)
@@ -390,6 +335,37 @@ importers:
       eslint-config-custom:
         specifier: workspace:*
         version: link:../eslint-config-custom
+      ts-config:
+        specifier: workspace:*
+        version: link:../ts-config
+      typescript:
+        specifier: ^5
+        version: 5.7.3
+
+  packages/remote-utils:
+    dependencies:
+      '@repo/api-contracts':
+        specifier: workspace:*
+        version: link:../api-contracts
+      '@repo/auth-core':
+        specifier: workspace:*
+        version: link:../auth-core
+    devDependencies:
+      '@types/node':
+        specifier: ^20
+        version: 20.17.50
+      '@types/react':
+        specifier: ^19
+        version: 19.1.4
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.1.5(@types/react@19.1.4)
+      eslint-config-custom:
+        specifier: workspace:*
+        version: link:../eslint-config-custom
+      react-router-dom:
+        specifier: ^7.12.0
+        version: 7.12.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       ts-config:
         specifier: workspace:*
         version: link:../ts-config
@@ -2191,6 +2167,10 @@ packages:
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
+  cookie@1.1.1:
+    resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
+    engines: {node: '>=18'}
+
   core-js-compat@3.42.0:
     resolution: {integrity: sha512-bQasjMfyDGyaeWKBIu33lHh9qlSR0MFE/Nmc6nMjf/iU9b3rSMdAYz1Baxrv4lPdGUsTqZudHA4jIGSJy0SWZQ==}
 
@@ -3495,6 +3475,23 @@ packages:
       '@types/react':
         optional: true
 
+  react-router-dom@7.12.0:
+    resolution: {integrity: sha512-pfO9fiBcpEfX4Tx+iTYKDtPbrSLLCbwJ5EqP+SPYQu1VYCXdy79GSj0wttR0U4cikVdlImZuEZ/9ZNCgoaxwBA==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+
+  react-router@7.12.0:
+    resolution: {integrity: sha512-kTPDYPFzDVGIIGNLS5VJykK0HfHLY5MF3b+xj0/tTyNYL1gF1qs7u67Z9jEhQk2sQ98SUaHxlG31g1JtF7IfVw==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+
   react-style-singleton@2.2.3:
     resolution: {integrity: sha512-b6jSvxvVnyptAiLjbkWLE/lOnR4lfTtDAl+eUC7RZy+QQWc6wRzIV2CE6xBuMmDxc2qIihtDCZD5NPOFl7fRBQ==}
     engines: {node: '>=10'}
@@ -3619,6 +3616,9 @@ packages:
     resolution: {integrity: sha512-SdsKMrI9TdgjdweUSR9MweHA4EJ8YxHn8DFaDisvhVlUOe4BF1tLD7GAj0lIqWVl+dPb/rExr0Btby5loQm20Q==}
     engines: {node: '>=10'}
     hasBin: true
+
+  set-cookie-parser@2.7.2:
+    resolution: {integrity: sha512-oeM1lpU/UvhTxw+g3cIfxXHyJRc/uidd3yK1P242gzHds0udQBYzs3y8j4gCCW+ZJ7ad0yctld8RYO+bdurlvw==}
 
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
@@ -5765,6 +5765,8 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
+  cookie@1.1.1: {}
+
   core-js-compat@3.42.0:
     dependencies:
       browserslist: 4.24.5
@@ -7151,6 +7153,20 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.1.4
 
+  react-router-dom@7.12.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      react-router: 7.12.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+
+  react-router@7.12.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      cookie: 1.1.1
+      react: 19.1.0
+      set-cookie-parser: 2.7.2
+    optionalDependencies:
+      react-dom: 19.1.0(react@19.1.0)
+
   react-style-singleton@2.2.3(@types/react@19.1.4)(react@19.1.0):
     dependencies:
       get-nonce: 1.0.1
@@ -7304,6 +7320,8 @@ snapshots:
 
   semver@7.7.3:
     optional: true
+
+  set-cookie-parser@2.7.2: {}
 
   set-function-length@1.2.2:
     dependencies:

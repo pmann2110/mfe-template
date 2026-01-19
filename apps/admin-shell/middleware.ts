@@ -24,7 +24,6 @@ export async function middleware(request: NextRequest) {
     // Map routes to required permissions
     const routePermissions: Record<string, Permission> = {
       '/admin/users': 'user:read',
-      '/admin/products': 'product:read',
     };
 
     const requiredPermission = routePermissions[path];

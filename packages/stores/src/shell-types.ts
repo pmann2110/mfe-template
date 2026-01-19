@@ -21,7 +21,6 @@ export interface ShellAppState {
   };
   remotes?: {
     users?: { loaded: boolean; loading: boolean; error: string | null };
-    products?: { loaded: boolean; loading: boolean; error: string | null };
   };
 }
 
@@ -39,9 +38,9 @@ export interface ShellAppActions {
   removeNotification: (notificationId: string) => void;
 
   // Remote actions
-  setRemoteLoading: (remoteName: 'users' | 'products', loading: boolean) => void;
-  setRemoteLoaded: (remoteName: 'users' | 'products', loaded: boolean) => void;
-  setRemoteError: (remoteName: 'users' | 'products', error: string | null) => void;
+  setRemoteLoading: (remoteName: 'users', loading: boolean) => void;
+  setRemoteLoaded: (remoteName: 'users', loaded: boolean) => void;
+  setRemoteError: (remoteName: 'users', error: string | null) => void;
 }
 
 export type ShellStore = ShellAppState & ShellAppActions;

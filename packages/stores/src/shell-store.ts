@@ -28,7 +28,6 @@ function createShellStore(initialState?: Partial<ShellAppState>): StoreApi<Shell
     // Add a new state for tracking remote module loading status
     remotes: {
       users: { loaded: false, loading: false, error: null },
-      products: { loaded: false, loading: false, error: null },
       ...initialState?.remotes,
     },
 

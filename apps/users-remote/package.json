@@ -6,15 +6,18 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite --port 6517 --strictPort",
+    "local": "STANDALONE_MODE=true vite --port 6517 --strictPort",
     "start": "vite preview --port 6517"
   },
   "dependencies": {
     "@repo/api-contracts": "workspace:*",
     "@repo/auth-core": "workspace:*",
+    "@repo/remote-utils": "workspace:*",
     "@repo/stores": "workspace:*",
     "@repo/ui": "workspace:*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-router-dom": "^7.12.0",
     "zustand": "^5.0.2"
   },
   "devDependencies": {

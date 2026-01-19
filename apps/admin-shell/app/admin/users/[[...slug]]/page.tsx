@@ -1,9 +1,13 @@
 import { redirect } from 'next/navigation';
 import { auth, toCoreSession } from '@repo/auth-next';
 import { canWithPermissions } from '@repo/rbac';
-import { UsersRemote } from '../../../components/remotes/UsersRemote';
+import { UsersRemote } from '../../../../components/remotes/UsersRemote';
 
-export default async function UsersPage() {
+export default async function UsersCatchAllPage({
+  params,
+}: {
+  params: { slug?: string[] };
+}) {
   const session = await auth();
 
   if (!session) {

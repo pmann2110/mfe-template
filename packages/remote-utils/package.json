@@ -1,0 +1,30 @@
+{
+  "name": "@repo/remote-utils",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@repo/api-contracts": "workspace:*",
+    "@repo/auth-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint-config-custom": "workspace:*",
+    "react-router-dom": "^7.12.0",
+    "ts-config": "workspace:*",
+    "typescript": "^5"
+  },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^6.0.0"
+  }
+}

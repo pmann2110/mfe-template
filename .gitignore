@@ -38,3 +38,7 @@ vite.config.ts.timestamp-*
 #Ignore cursor AI rules
 .cursor
 .codacy
+
+
+#Ignore cursor AI rules
+.cursor/rules/codacy.mdc

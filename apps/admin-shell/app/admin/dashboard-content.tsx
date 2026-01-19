@@ -20,12 +20,6 @@ export function DashboardContent({ session }: DashboardContentProps) {
       permission: 'user:read' as const,
     },
     {
-      title: 'Products',
-      value: '0',
-      description: 'Total products',
-      permission: 'product:read' as const,
-    },
-    {
       title: 'Permissions',
       value: session.user.permissions?.length.toString() || '0',
       description: 'Active permissions',

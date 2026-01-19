@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Admin Portal',
-  description: 'Admin portal for managing users and products',
+  description: 'Admin portal for managing users',
 };
 
 export default function RootLayout({

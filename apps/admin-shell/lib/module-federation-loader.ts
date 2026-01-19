@@ -563,7 +563,31 @@ async function importRemoteContainer(
     return { importErr: new Error('Remote entry did not expose init/get') };
   } catch (importErr) {
     console.error(`[MF] Failed to import remote container from ${url}:`, importErr);
-    return { importErr };
+    
+    // Provide more helpful error messages for common failures
+    let enhancedError = importErr;
+    if (importErr instanceof Error) {
+      const errMsg = importErr.message.toLowerCase();
+      if (errMsg.includes('failed to fetch') || 
+          errMsg.includes('networkerror') ||
+          errMsg.includes('load failed') ||
+          errMsg.includes('connection refused') ||
+          errMsg.includes('could not connect')) {
+        enhancedError = new Error(
+          `Cannot connect to remote server at ${url}. ` +
+          `Make sure the remote dev server is running and accessible. ` +
+          `Original error: ${importErr.message}`
+        );
+      } else if (errMsg.includes('404') || errMsg.includes('not found')) {
+        enhancedError = new Error(
+          `Remote entry not found at ${url}. ` +
+          `Check that the remote is built and the URL is correct. ` +
+          `Original error: ${importErr.message}`
+        );
+      }
+    }
+    
+    return { importErr: enhancedError };
   }
 }
 
@@ -612,9 +636,23 @@ async function initRemote(remoteName: string, importNonce?: string): Promise<voi
         imported ?? ((window as any)[config.scope] as RemoteContainer | undefined);
 
       if (!container || !container.init || !container.get) {
-        throw new Error(
-          `Remote ${remoteName} failed to initialize.${formatImportErr(importErr)}`,
-        );
+        const baseError = `Remote ${remoteName} failed to initialize.${formatImportErr(importErr)}`;
+        // Enhance error message if it's a connection issue
+        if (importErr instanceof Error) {
+          const errMsg = importErr.message.toLowerCase();
+          if (errMsg.includes('cannot connect') || 
+              errMsg.includes('connection refused') ||
+              errMsg.includes('failed to fetch')) {
+            throw new Error(
+              `${baseError}\n` +
+              `\nTroubleshooting:\n` +
+              `1. Ensure the ${remoteName} remote dev server is running\n` +
+              `2. Check that the URL in remote-configs.json is correct\n` +
+              `3. Verify CORS settings if accessing from a different origin`
+            );
+          }
+        }
+        throw new Error(baseError);
       }
 
       // Ensure __tla is awaited before calling container.init
