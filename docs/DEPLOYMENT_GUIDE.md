@@ -45,12 +45,6 @@ This guide provides instructions for deploying the Microfrontends Module Federat
    vercel --prod
    ```
 
-   **Products Remote**:
-   ```bash
-   cd apps/products-remote
-   vercel --prod
-   ```
-
    **Users Remote**:
    ```bash
    cd apps/users-remote
@@ -126,19 +120,11 @@ NODE_ENV=production
      web-shell:
        build: ./apps/web-shell
        ports:
-         - "3001:3001"
+         - "3000:3000"
        environment:
          - NEXTAUTH_URL=https://your-domain.com
          - NEXTAUTH_SECRET=your-secret-key
          - API_BASE_URL=https://your-api-domain.com
-         - NODE_ENV=production
-       restart: unless-stopped
-     
-     products-remote:
-       build: ./apps/products-remote
-       ports:
-         - "3529:3529"
-       environment:
          - NODE_ENV=production
        restart: unless-stopped
      
@@ -230,7 +216,6 @@ NODE_ENV=production
    ```bash
    kubectl apply -f apps/admin-shell/k8s/
    kubectl apply -f apps/web-shell/k8s/
-   kubectl apply -f apps/products-remote/k8s/
    kubectl apply -f apps/users-remote/k8s/
    ```
 
@@ -389,7 +374,6 @@ jobs:
           path: |
             apps/admin-shell/.next
             apps/web-shell/.next
-            apps/products-remote/dist
             apps/users-remote/dist
 
   deploy-staging:
@@ -434,9 +418,10 @@ jobs:
 ### Common Deployment Issues
 
 1. **Module Federation Not Working**:
-   - Verify remote URLs are correct
+   - Verify remote URLs in `remote-configs.json` are correct
    - Check CORS settings
-   - Ensure all remotes are deployed
+   - Ensure all remotes are deployed and accessible
+   - Verify CSS URLs are set for production environment
 
 2. **Authentication Failures**:
    - Verify environment variables

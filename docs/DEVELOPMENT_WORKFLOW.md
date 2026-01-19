@@ -8,8 +8,8 @@ This document outlines the development workflow, best practices, and guidelines 
 ## Development Environment Setup
 
 ### Prerequisites
-- Node.js v18+ (LTS recommended)
-- pnpm v8+ (package manager)
+- Node.js v20.x (required)
+- pnpm v9.4.0 (required - specified in packageManager)
 - Git
 - VSCode (recommended IDE)
 

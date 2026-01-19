@@ -10,7 +10,7 @@ This document outlines the CSS configuration strategy used across all apps in th
 - These variables are referenced in the `tailwind.config.js` files of each app to ensure a consistent design system.
 
 ### 2. **Tailwind Configuration (`tailwind.config.js`)**
-- Each app (`admin-shell`, `products-remote`, `users-remote`, `web-shell`) has its own `tailwind.config.js` file.
+- Each app (`admin-shell`, `users-remote`, `web-shell`) has its own `tailwind.config.js` file.
 - These files are now identical in structure and content, ensuring consistency across all apps.
 - The configuration extends Tailwind's theme to use the CSS variables defined in `globals.css`.
 

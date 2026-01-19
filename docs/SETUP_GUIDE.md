@@ -8,8 +8,8 @@ This guide provides step-by-step instructions for setting up the Microfrontends 
 ## Prerequisites
 
 ### System Requirements
-- Node.js v18+ (LTS recommended)
-- pnpm v8+ (package manager)
+- Node.js v20.x (required)
+- pnpm v9.4.0 (required)
 - Git
 - Operating System: macOS, Linux, or Windows (WSL recommended for Windows)
 
@@ -30,34 +30,20 @@ cd mfe-module-federation
 
 ### 2. Install Dependencies
 ```bash
-# Install pnpm if not already installed
-npm install -g pnpm
-
 # Install project dependencies
 pnpm install
 ```
 
 ### 3. Set Up Environment Variables
-Copy the example environment files and configure them:
+This repo does not ship `.env.example` files. Create `.env.local` files per app as needed.
 
-```bash
-# For admin-shell
-cp apps/admin-shell/.env.example apps/admin-shell/.env.local
-
-# For web-shell
-cp apps/web-shell/.env.example apps/web-shell/.env.local
-
-# For products-remote
-cp apps/products-remote/.env.example apps/products-remote/.env.local
-
-# For users-remote
-cp apps/users-remote/.env.example apps/users-remote/.env.local
-```
-
-Configure the environment variables according to your setup. Key variables include:
-- `NEXTAUTH_URL`: Base URL for NextAuth.js
+Minimum required variables:
+- `NEXTAUTH_URL`: Base URL for NextAuth.js callbacks (e.g. `http://localhost:3000` or `http://localhost:3001`)
 - `NEXTAUTH_SECRET`: Secret key for NextAuth.js (generate with `openssl rand -base64 32`)
-- `API_BASE_URL`: Base URL for your backend API
+
+Notes:
+- The current auth implementation is **mock credentials** (see `packages/auth-next/src/authOptions.ts`). If you add a real backend, you can introduce an `API_BASE_URL` (or similar) and wire it into `validateCredentials()`.
+- `users-remote` can run in **federated mode** (default) or **standalone mode** using `STANDALONE_MODE=true`.
 
 ---
 
@@ -73,9 +59,8 @@ pnpm run dev
 ```
 
 This will start:
-- Admin Shell: `http://localhost:3000`
-- Web Shell: `http://localhost:3001`
-- Products Remote: `http://localhost:3529`
+- Web Shell: `http://localhost:3000`
+- Admin Shell: `http://localhost:3001`
 - Users Remote: `http://localhost:6517`
 
 ### Running Individual Applications
@@ -89,11 +74,11 @@ pnpm --filter admin-shell dev
 # Web Shell
 pnpm --filter web-shell dev
 
-# Products Remote
-pnpm --filter products-remote dev
-
 # Users Remote
 pnpm --filter users-remote dev
+
+# Users Remote (standalone mode - federation disabled)
+pnpm --filter users-remote local
 ```
 
 ### Building for Production
@@ -108,13 +93,12 @@ pnpm --filter admin-shell build
 
 ### Running Tests
 
-```bash
-# Run all tests
-pnpm run test
+There is no dedicated automated test suite configured in this repo yet.
+Use the standard checks instead:
 
-# Run tests for specific package
-pnpm --filter @repo/ui test
-```
+- `pnpm typecheck`
+- `pnpm lint`
+- `pnpm checks` (build + lint + typecheck across the monorepo)
 
 ---
 
@@ -125,13 +109,13 @@ pnpm --filter @repo/ui test
 ├── apps/
 │   ├── admin-shell/          # Next.js admin dashboard shell
 │   ├── web-shell/             # Next.js web shell
-│   ├── products-remote/       # Vite-based products remote application
 │   └── users-remote/          # Vite-based users remote application
 ├── packages/
 │   ├── api-contracts/         # API interfaces and data models
 │   ├── auth-core/             # Core authentication logic
 │   ├── auth-next/             # Next.js-specific authentication utilities
 │   ├── rbac/                  # Role-Based Access Control utilities
+│   ├── remote-utils/          # Remote helpers (routing sync, standalone auth provider)
 │   ├── stores/                # Global state management
 │   ├── ts-config/             # Shared TypeScript configurations
 │   └── ui/                    # Shared UI components
@@ -159,6 +143,7 @@ pnpm --filter @repo/ui test
 - Remote modules should expose their components via the `exposes` configuration
 - Shared dependencies should be marked as singletons when appropriate
 - Use the `preloadRemote` function for better performance
+- The host (`admin-shell`) loads environment-specific remote URLs from `apps/admin-shell/public/config/remote-configs.json`
 
 ### State Management
 - Use the global shell store for shared state
@@ -187,9 +172,6 @@ pnpm --filter @repo/ui test
    vercel --prod --scope your-team-name
    
    # Deploy web-shell
-   vercel --prod --scope your-team-name
-   
-   # Deploy products-remote
    vercel --prod --scope your-team-name
    
    # Deploy users-remote
