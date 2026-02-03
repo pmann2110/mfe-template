@@ -11,7 +11,9 @@ export function can(permission: Permission, session: Session | null): boolean {
 }
 
 /**
- * Check permission using permissions array directly (for next-auth compatibility)
+ * Check permission using permissions array directly (for next-auth compatibility).
+ * Uses only permission strings (e.g. admin:access, user:read). Admin role is mapped
+ * to admin:access in auth-options when building the session.
  */
 export function canWithPermissions(
   permission: Permission,
@@ -19,11 +21,8 @@ export function canWithPermissions(
 ): boolean {
   if (!permissions || permissions.length === 0) return false;
 
-  // Admin has all permissions
-  if (permissions.includes('admin') || permissions.includes('admin:access'))
-    return true;
+  if (permissions.includes('admin:access')) return true;
 
-  // Check if user has the specific permission
   return permissions.includes(permission);
 }
 

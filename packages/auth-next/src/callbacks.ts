@@ -2,18 +2,15 @@ import type { JWT } from 'next-auth/jwt';
 import type { Session } from 'next-auth';
 import type { AppUser } from './types';
 
-interface JwtCallbackParams {
-  token: JWT;
-  user?: AppUser & { sub?: string; accessToken?: string };
-}
-
-export function jwtCallback({ token, user }: JwtCallbackParams): JWT {
-  if (user) {
-    token.userId = user.id;
-    token.roles = user.roles;
-    token.permissions = user.permissions;
-    if (user.accessToken) {
-      token.accessToken = user.accessToken;
+export function jwtCallback(params: { token: JWT; user?: unknown }): JWT {
+  const { token, user } = params;
+  const appUser = user as (AppUser & { sub?: string; accessToken?: string }) | undefined;
+  if (appUser) {
+    token.userId = appUser.id;
+    token.roles = appUser.roles;
+    token.permissions = appUser.permissions;
+    if (appUser.accessToken) {
+      token.accessToken = appUser.accessToken;
     }
   }
   return token;

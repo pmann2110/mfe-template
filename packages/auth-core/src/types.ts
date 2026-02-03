@@ -1,11 +1,10 @@
 export type Permission =
   | 'admin:access'
   | 'user:read'
-  | 'user:write'
-  | 'product:read'
-  | 'product:write';
+  | 'user:write';
 
-export interface User {
+/** Authenticated identity (roles, permissions). Use for session and RBAC. */
+export interface AuthUser {
   id: string;
   email: string;
   name: string;
@@ -14,7 +13,7 @@ export interface User {
 }
 
 export interface Session {
-  user: User;
+  user: AuthUser;
   token?: string;
   expiresAt: number;
 }

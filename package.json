@@ -13,7 +13,8 @@
     "version-packages": "changeset version",
     "release": "changeset publish",
     "start": "turbo start",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "test": "turbo test"
   },
   "lint-staged": {
     "**/*.{ts,tsx,md,json,jsonc}": [

@@ -4,6 +4,10 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { jwtCallback, sessionCallback } from './callbacks';
 import type { AppUser } from './types';
 
+/**
+ * Maps credentials to roles and permissions. Admin role receives admin:access so
+ * RBAC canWithPermissions() treats them as full access without checking roles.
+ */
 async function validateCredentials(
   email: string,
   _password: string,
@@ -23,13 +27,11 @@ async function validateCredentials(
       'admin:access',
       'user:read',
       'user:write',
-      'product:read',
-      'product:write',
     ];
   } else if (email.includes('manager')) {
-    permissions = ['admin:access', 'user:read', 'product:read', 'product:write'];
+    permissions = ['admin:access', 'user:read'];
   } else {
-    permissions = ['user:read', 'product:read'];
+    permissions = ['user:read'];
   }
 
   await Promise.resolve();
@@ -42,13 +44,21 @@ async function validateCredentials(
   };
 }
 
-if (!process.env.NEXTAUTH_SECRET) {
-  // eslint-disable-next-line no-console -- env validation at startup
-  console.warn('⚠️  NEXTAUTH_SECRET is not set. Using fallback secret for development only.');
-}
-if (!process.env.NEXTAUTH_URL) {
-  // eslint-disable-next-line no-console -- env validation at startup
-  console.warn('⚠️  NEXTAUTH_URL is not set. Using http://localhost:3000 as default.');
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.NEXTAUTH_SECRET || !process.env.NEXTAUTH_URL) {
+    throw new Error(
+      'NEXTAUTH_SECRET and NEXTAUTH_URL are required in production. Set them in your environment.',
+    );
+  }
+} else {
+  if (!process.env.NEXTAUTH_SECRET) {
+    // eslint-disable-next-line no-console -- env validation at startup
+    console.warn('⚠️  NEXTAUTH_SECRET is not set. Using fallback secret for development only.');
+  }
+  if (!process.env.NEXTAUTH_URL) {
+    // eslint-disable-next-line no-console -- env validation at startup
+    console.warn('⚠️  NEXTAUTH_URL is not set. Using http://localhost:3000 as default.');
+  }
 }
 
 export const authConfig: NextAuthConfig = {
@@ -91,7 +101,8 @@ export const authConfig: NextAuthConfig = {
     }),
   ],
   callbacks: {
-    jwt: jwtCallback,
+    // Cast needed: our authorize() returns AppUser; NextAuth types expect User | AdapterUser
+    jwt: jwtCallback as NonNullable<NextAuthConfig['callbacks']>['jwt'],
     session: sessionCallback,
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = Boolean(auth?.user);

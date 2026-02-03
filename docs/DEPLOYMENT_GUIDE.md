@@ -62,6 +62,15 @@ API_BASE_URL=https://your-api-domain.com
 NODE_ENV=production
 ```
 
+**Production requirements:** In production, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are required; the app will throw at startup if either is missing. Do not rely on fallbacks in production.
+
+**Admin Shell (remote loading):** For the admin shell, set `NEXT_PUBLIC_ALLOWED_REMOTE_ORIGINS` to a comma-separated list of allowed remote origins (e.g. `https://users.example.com`). Only remotes whose `remoteEntry.js` URL origin is in this list will be loaded. In development, only `localhost` and `127.0.0.1` are allowed by default.
+
+#### CORS (development vs production)
+
+- **Development:** The admin-shell Next config and remote Vite configs use permissive CORS (`Access-Control-Allow-Origin: *`) for local development so the shell can load remote entry scripts from localhost. This is intended for dev only.
+- **Production:** Do not rely on `*` in production. Restrict the admin shell’s `NEXT_PUBLIC_ALLOWED_REMOTE_ORIGINS` to the exact remote origins you deploy. Remotes should serve with appropriate CORS headers (e.g. allow only the admin shell origin) when possible. See your hosting provider’s docs for setting CORS on static assets.
+
 #### Custom Domains
 
 1. Add custom domains in Vercel dashboard

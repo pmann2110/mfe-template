@@ -15,11 +15,11 @@ export class MockAuthClient implements AuthClient {
     // Mock login - accept any credentials
     let roles: string[];
     if (email.includes('admin')) {
-      roles = ['admin', 'admin:access', 'user:read', 'user:write', 'product:read', 'product:write'];
+      roles = ['admin', 'admin:access', 'user:read', 'user:write'];
     } else if (email.includes('manager')) {
-      roles = ['manager', 'admin:access', 'user:read', 'product:read', 'product:write'];
+      roles = ['manager', 'admin:access', 'user:read'];
     } else {
-      roles = ['viewer', 'user:read', 'product:read'];
+      roles = ['viewer', 'user:read'];
     }
 
     const session: Session = {

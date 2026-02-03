@@ -11,6 +11,12 @@ import type { Session } from 'next-auth';
 import { initShellStore, useNotifications, useShellActions } from '@repo/stores';
 import { toCoreSession } from '@repo/auth-next';
 import { preloadRemote } from '../../lib/module-federation-loader';
+import { ADMIN_ROUTES, type AdminRouteIcon } from '../../lib/admin-routes';
+
+const ICON_MAP: Record<AdminRouteIcon, React.ComponentType<{ className?: string }>> = {
+  dashboard: LayoutDashboard,
+  users: UsersIcon,
+};
 
 interface AdminLayoutClientProps {
   children: React.ReactNode;
@@ -40,15 +46,7 @@ export function AdminLayoutClient({
     await signOut({ callbackUrl: '/login' });
   };
 
-  const navItems = [
-    { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    {
-      path: '/admin/users',
-      label: 'Users',
-      icon: UsersIcon,
-      permission: 'user:read' as const,
-    },
-  ].filter(
+  const navItems = ADMIN_ROUTES.filter(
     (item) =>
       !item.permission ||
       session.user.permissions?.includes(item.permission),
@@ -72,8 +70,8 @@ export function AdminLayoutClient({
             <nav className="flex gap-2">
               {navItems.map((item) => {
                 const isActive = pathname === item.path;
-                const remoteName = item.path.includes('users') ? 'users' : null;
-                const Icon = item.icon;
+                const remoteName = item.remoteName;
+                const Icon = ICON_MAP[item.icon];
                 return (
                   <Link
                     key={item.path}
@@ -84,10 +82,10 @@ export function AdminLayoutClient({
                         : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-sm'
                     }`}
                     onMouseEnter={() =>
-                      remoteName && preloadRemote(remoteName, { init: remoteName === 'users' })
+                      remoteName && preloadRemote(remoteName, { init: !!remoteName })
                     }
                     onFocus={() =>
-                      remoteName && preloadRemote(remoteName, { init: remoteName === 'users' })
+                      remoteName && preloadRemote(remoteName, { init: !!remoteName })
                     }
                   >
                     <Icon className={`h-4 w-4 transition-transform ${isActive ? '' : 'group-hover:scale-110'}`} />

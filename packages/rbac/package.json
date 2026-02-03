@@ -7,7 +7,9 @@
   "types": "./src/index.ts",
   "scripts": {
     "lint": "eslint . --max-warnings 0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@repo/auth-core": "workspace:*"
@@ -16,6 +18,7 @@
     "@types/node": "^20",
     "eslint-config-custom": "workspace:*",
     "ts-config": "workspace:*",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.0"
   }
 }

@@ -43,8 +43,12 @@ The project is organized into two main directories:
 - **`packages/stores`**: Implements a global shell store using Zustand (vanilla store) with singleton pattern. Manages authentication, tenant, UI notifications, and remote loading status.
 - **Singleton Pattern**: Store attached to `globalThis.__SHELL_STORE__` and `window.__SHELL_STORE__` for cross-module sharing.
 
+**Which store to use:** Use **`@repo/stores`** (initShellStore / getShellStore) when the shell or remotes need shared state (session, notifications, remote loading). Use **`@repo/auth-core`**’s `createShellStore` only for non–Next.js shells or standalone remotes that need their own auth client (login/logout/can). The admin-shell uses NextAuth + `@repo/stores`; do not use `createShellStore` in Next.js shells that use auth-next. See [State and Auth](docs/STATE_AND_AUTH.md) for details.
+
 #### 4. **API Contracts**
 - **`packages/api-contracts`**: Defines interfaces for users API, routing types (`RoutingProps`), and data models.
+
+**Auth vs domain entities:** `@repo/auth-core` defines `AuthUser` and `Session` for the authenticated identity (roles, permissions). Use these for session and RBAC. `@repo/api-contracts` defines `User` types for domain entities (e.g. user list/detail, API payloads). Use auth types for “who is logged in”; use api-contracts types for “data about users.”
 
 #### 5. **UI Components**
 - **`packages/ui`**: Contains shared UI components built with Tailwind CSS v4 and Radix UI primitives. CSS variables defined in `globals.css` for consistent theming.
@@ -104,7 +108,7 @@ The project is organized into two main directories:
   - Admin Shell: `http://localhost:3001`
   - Web Shell: `http://localhost:3000`
   - Users Remote: `http://localhost:6517/remoteEntry.js`
-- **Production**: Remote modules loaded from production URLs configured in `remote-configs.json` with optional CSS URLs for production builds.
+- **Production**: Remote modules loaded from production URLs configured in `remote-configs.json` with optional CSS URLs. In production, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are required (app fails to start if missing). Set `NEXT_PUBLIC_ALLOWED_REMOTE_ORIGINS` (comma-separated origins, e.g. `https://users.example.com`) so the admin shell only loads remotes from allowed origins.
 - **Standalone Mode**: Users remote supports `STANDALONE_MODE=true` for independent development without federation.
 
 ---
@@ -170,6 +174,7 @@ This will start:
 - **[Deployment Guide](docs/DEPLOYMENT_GUIDE.md)**: Deployment strategies and configurations
 - **[Packages Strategy](docs/PACKAGES_STRATEGY.md)**: Shared package management and versioning
 - **[CSS Configuration](docs/CSS_CONFIGURATION_STRATEGY.md)**: CSS and Tailwind setup
+- **[State and Auth](docs/STATE_AND_AUTH.md)**: When to use `@repo/stores` vs `auth-core`’s `createShellStore`
 - **[Architecture Diagrams](docs/MFE.drawio.xml)**: Visual architecture documentation
 
 ## Conclusion

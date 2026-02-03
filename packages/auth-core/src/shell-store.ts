@@ -1,3 +1,9 @@
+/**
+ * Auth-focused shell store for login/logout/rehydrate and permission checks.
+ * Use this for non-Next.js shells or standalone remotes that need their own auth client.
+ * The admin-shell uses NextAuth + @repo/stores (initShellStore/getShellStore) instead;
+ * do not use createShellStore in Next.js shells that use auth-next.
+ */
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { Session, AuthStatus } from './types';
 import type { AuthClient } from './auth-client';
@@ -13,7 +19,7 @@ export interface ShellState {
   can: (permission: string) => boolean;
 }
 
-export function createShellStore(authClient: AuthClient = new MockAuthClient()): ReturnType<typeof createStore<ShellState>> {
+export function createShellStore(authClient: AuthClient = new MockAuthClient()): StoreApi<ShellState> {
   return createStore<ShellState>((set, get) => ({
     session: null,
     status: 'idle',

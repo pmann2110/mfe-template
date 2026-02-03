@@ -16,7 +16,7 @@ The project is structured as a monorepo using pnpm workspaces. Shared packages a
 
 ### Shared Packages
 
-1. **`@repo/api-contracts`**: Contains API contracts and types for products and users.
+1. **`@repo/api-contracts`**: Contains API contracts and types for users.
 2. **`@repo/auth-core`**: Provides authentication logic and types.
 3. **`@repo/ui`**: Contains UI components and styles.
 
