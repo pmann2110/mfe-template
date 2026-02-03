@@ -1,2 +1,2 @@
-export { RouterSync } from './routing/RouterSync';
-export { StandaloneAuthProvider, useStandaloneAuth } from './auth/StandaloneAuthProvider';
+export { RouterSync } from './routing/router-sync';
+export { StandaloneAuthProvider, useStandaloneAuth } from './auth/standalone-auth-provider';

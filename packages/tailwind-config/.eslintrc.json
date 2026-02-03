@@ -1,0 +1,10 @@
+{
+  "extends": ["eslint-config-custom"],
+  "ignorePatterns": ["node_modules/"],
+  "overrides": [
+    {
+      "files": ["tailwind.config.base.js"],
+      "rules": { "import/no-default-export": "off" }
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "extends": ["eslint-config-custom"],
+  "ignorePatterns": ["node_modules/", "dist/"],
+  "parserOptions": { "project": "./tsconfig.json" }
+}

@@ -1,17 +1,21 @@
 import { createStore } from 'zustand/vanilla';
 import type { StoreApi } from 'zustand/vanilla';
-import type { ShellAppState, ShellAppActions, ShellStore, Notification } from './shell-types';
+import type { ShellAppState, ShellStore, Notification } from './shell-types';
 
-const STORE_KEY = '__SHELL_STORE__';
+declare global {
+  interface Window {
+    __SHELL_STORE__?: StoreApi<ShellStore>;
+  }
+}
 
 // Global store will be attached to window/globalThis at runtime
 
 function generateNotificationId(): string {
-  return `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `notification-${String(Date.now())}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 function createShellStore(initialState?: Partial<ShellAppState>): StoreApi<ShellStore> {
-  return createStore<ShellStore>((set, get) => ({
+  return createStore<ShellStore>((set, _get) => ({
     // Initial state
     auth: {
       session: null,
@@ -25,11 +29,8 @@ function createShellStore(initialState?: Partial<ShellAppState>): StoreApi<Shell
       notifications: [],
       ...initialState?.ui,
     },
-    // Add a new state for tracking remote module loading status
-    remotes: {
-      users: { loaded: false, loading: false, error: null },
-      ...initialState?.remotes,
-    },
+    // Track remote module loading status (keyed by remote name)
+    remotes: initialState?.remotes ?? {},
 
     // Auth actions
     setSession: (session) => {
@@ -100,51 +101,75 @@ function createShellStore(initialState?: Partial<ShellAppState>): StoreApi<Shell
       }));
     },
 
-    // Remote actions
+    // Remote actions (each update produces a full { loaded, loading, error } for the remote)
     setRemoteLoading: (remoteName, loading) => {
-      set((state) => ({
-        remotes: {
-          ...state.remotes,
-          [remoteName]: {
-            ...state.remotes?.[remoteName],
-            loading,
+      set((state) => {
+        const prev = state.remotes?.[remoteName];
+        return {
+          remotes: {
+            ...state.remotes,
+            [remoteName]: {
+              loaded: prev?.loaded ?? false,
+              loading,
+              error: prev?.error ?? null,
+            },
           },
-        },
-      }));
+        };
+      });
     },
 
     setRemoteLoaded: (remoteName, loaded) => {
-      set((state) => ({
-        remotes: {
-          ...state.remotes,
-          [remoteName]: {
-            ...state.remotes?.[remoteName],
-            loaded,
+      set((state) => {
+        const prev = state.remotes?.[remoteName];
+        return {
+          remotes: {
+            ...state.remotes,
+            [remoteName]: {
+              loaded,
+              loading: prev?.loading ?? false,
+              error: prev?.error ?? null,
+            },
           },
-        },
-      }));
+        };
+      });
     },
 
     setRemoteError: (remoteName, error) => {
-      set((state) => ({
-        remotes: {
-          ...state.remotes,
-          [remoteName]: {
-            ...state.remotes?.[remoteName],
-            error,
+      set((state) => {
+        const prev = state.remotes?.[remoteName];
+        return {
+          remotes: {
+            ...state.remotes,
+            [remoteName]: {
+              loaded: prev?.loaded ?? false,
+              loading: prev?.loading ?? false,
+              error,
+            },
           },
-        },
-      }));
+        };
+      });
     },
   }));
 }
 
+interface ShellStoreGlobal {
+  __SHELL_STORE__?: StoreApi<ShellStore>;
+}
+
+function getGlobalStore(): StoreApi<ShellStore> | undefined {
+  if (typeof window !== 'undefined' && window.__SHELL_STORE__) return window.__SHELL_STORE__;
+  return (globalThis as ShellStoreGlobal).__SHELL_STORE__;
+}
+
+function setGlobalStore(store: StoreApi<ShellStore>): void {
+  (globalThis as ShellStoreGlobal).__SHELL_STORE__ = store;
+  if (typeof window !== 'undefined') window.__SHELL_STORE__ = store;
+}
+
 export function initShellStore(initialState?: Partial<ShellAppState>): StoreApi<ShellStore> {
-  // Check if store already exists on globalThis/window
-  const existingStore = (globalThis as any).__SHELL_STORE__ || (typeof window !== 'undefined' ? (window as any).__SHELL_STORE__ : undefined);
+  const existingStore = getGlobalStore();
 
   if (existingStore) {
-    // If store exists, just update initial state if provided
     if (initialState) {
       existingStore.setState((state: ShellStore) => ({
         ...state,
@@ -154,22 +179,13 @@ export function initShellStore(initialState?: Partial<ShellAppState>): StoreApi<
     return existingStore;
   }
 
-  // Create new store
   const store = createShellStore(initialState);
-
-  // Attach to global scope for singleton access
-  if (typeof globalThis !== 'undefined') {
-    (globalThis as any).__SHELL_STORE__ = store;
-  }
-  if (typeof window !== 'undefined') {
-    (window as any).__SHELL_STORE__ = store;
-  }
-
+  setGlobalStore(store);
   return store;
 }
 
 export function getShellStore(): StoreApi<ShellStore> {
-  const store = (globalThis as any).__SHELL_STORE__ || (typeof window !== 'undefined' ? (window as any).__SHELL_STORE__ : undefined);
+  const store = getGlobalStore();
 
   if (!store) {
     // Auto-initialize the store if it doesn't exist

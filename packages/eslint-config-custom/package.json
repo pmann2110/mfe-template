@@ -2,6 +2,7 @@
   "name": "eslint-config-custom",
   "version": "0.0.1",
   "private": true,
+  "main": "base.js",
   "devDependencies": {
     "@next/eslint-plugin-next": "15.1.6",
     "@typescript-eslint/parser": "^8.22.0",

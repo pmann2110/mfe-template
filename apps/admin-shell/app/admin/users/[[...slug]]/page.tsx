@@ -6,8 +6,9 @@ import { UsersRemote } from '../../../../components/remotes/UsersRemote';
 export default async function UsersCatchAllPage({
   params,
 }: {
-  params: { slug?: string[] };
+  params: Promise<{ slug?: string[] }>;
 }) {
+  await params; // Next.js 15: params is a Promise
   const session = await auth();
 
   if (!session) {

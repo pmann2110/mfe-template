@@ -22,10 +22,10 @@ export interface UpdateProductRequest {
 }
 
 export interface ProductApi {
-  list(): Promise<Product[]>;
-  get(id: string): Promise<Product>;
-  create(data: CreateProductRequest): Promise<Product>;
-  update(id: string, data: UpdateProductRequest): Promise<Product>;
-  archive(id: string): Promise<Product>;
-  delete(id: string): Promise<void>;
+  list: () => Promise<Product[]>;
+  get: (id: string) => Promise<Product>;
+  create: (data: CreateProductRequest) => Promise<Product>;
+  update: (id: string, data: UpdateProductRequest) => Promise<Product>;
+  archive: (id: string) => Promise<Product>;
+  delete: (id: string) => Promise<void>;
 }

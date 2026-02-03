@@ -42,7 +42,7 @@ Minimum required variables:
 - `NEXTAUTH_SECRET`: Secret key for NextAuth.js (generate with `openssl rand -base64 32`)
 
 Notes:
-- The current auth implementation is **mock credentials** (see `packages/auth-next/src/authOptions.ts`). If you add a real backend, you can introduce an `API_BASE_URL` (or similar) and wire it into `validateCredentials()`.
+- The current auth implementation is **mock credentials** (see `packages/auth-next/src/auth-options.ts`). If you add a real backend, you can introduce an `API_BASE_URL` (or similar) and wire it into `validateCredentials()`.
 - `users-remote` can run in **federated mode** (default) or **standalone mode** using `STANDALONE_MODE=true`.
 
 ---

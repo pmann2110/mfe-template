@@ -1,8 +1,7 @@
-import { createStore } from 'zustand/vanilla';
+import { createStore, type StoreApi } from 'zustand/vanilla';
 import type { Session, AuthStatus } from './types';
 import type { AuthClient } from './auth-client';
 import { MockAuthClient } from './auth-client';
-import type { StoreApi } from 'zustand/vanilla';
 
 export interface ShellState {
   session: Session | null;
@@ -14,7 +13,7 @@ export interface ShellState {
   can: (permission: string) => boolean;
 }
 
-export function createShellStore(authClient: AuthClient = new MockAuthClient()) {
+export function createShellStore(authClient: AuthClient = new MockAuthClient()): ReturnType<typeof createStore<ShellState>> {
   return createStore<ShellState>((set, get) => ({
     session: null,
     status: 'idle',

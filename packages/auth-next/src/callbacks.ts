@@ -1,17 +1,17 @@
 import type { JWT } from 'next-auth/jwt';
 import type { Session } from 'next-auth';
+import type { AppUser } from './types';
 
-export function jwtCallback({
-  token,
-  user,
-}: {
+interface JwtCallbackParams {
   token: JWT;
-  user?: any;
-}) {
+  user?: AppUser & { sub?: string; accessToken?: string };
+}
+
+export function jwtCallback({ token, user }: JwtCallbackParams): JWT {
   if (user) {
     token.userId = user.id;
-    token.roles = user.roles || [];
-    token.permissions = user.permissions || [];
+    token.roles = user.roles;
+    token.permissions = user.permissions;
     if (user.accessToken) {
       token.accessToken = user.accessToken;
     }
@@ -26,23 +26,20 @@ export function sessionCallback({
   session: Session;
   token: JWT;
 }): Session {
-  if (token) {
-    // Ensure we have all required user properties
-    session.user = {
-      id: token.userId || token.sub || '',
-      email: token.email || session.user?.email || '',
-      name: token.name || session.user?.name || '',
-      roles: Array.isArray(token.roles) ? token.roles : [],
-      permissions: Array.isArray(token.permissions) ? token.permissions : [],
-    };
-    
-    // Add additional token properties to session
-    if (token.accessToken) {
-      session.accessToken = token.accessToken;
-    }
-    if (token.exp) {
-      session.expires = new Date(token.exp * 1000).toISOString();
-    }
+  const email = token.email ?? '';
+  const name = token.name ?? '';
+  session.user = {
+    id: token.userId ?? token.sub ?? '',
+    email,
+    name,
+    roles: Array.isArray(token.roles) ? token.roles : [],
+    permissions: Array.isArray(token.permissions) ? token.permissions : [],
+  };
+  if (token.accessToken) {
+    session.accessToken = token.accessToken;
+  }
+  if (token.exp !== undefined) {
+    session.expires = new Date(token.exp * 1000).toISOString();
   }
   return session;
 }

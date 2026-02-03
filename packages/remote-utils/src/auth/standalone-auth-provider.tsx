@@ -19,7 +19,7 @@ interface StandaloneAuthProviderProps {
 /**
  * Provider for standalone mode authentication
  * Provides a mock session for local development when running the remote app independently
- * 
+ *
  * @example
  * ```tsx
  * const createMockSession = () => ({
@@ -32,13 +32,16 @@ interface StandaloneAuthProviderProps {
  *   },
  *   expiresAt: Date.now() + 86400000,
  * });
- * 
+ *
  * <StandaloneAuthProvider createMockSession={createMockSession}>
  *   <App />
  * </StandaloneAuthProvider>
  * ```
  */
-export function StandaloneAuthProvider({ children, createMockSession }: StandaloneAuthProviderProps) {
+export function StandaloneAuthProvider({
+  children,
+  createMockSession,
+}: StandaloneAuthProviderProps): React.ReactElement {
   const session = createMockSession();
 
   return (

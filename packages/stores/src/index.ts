@@ -11,4 +11,4 @@ export {
   useNotifications,
   useUnreadNotificationsCount,
   useShellActions,
-} from './useShellStore';
+} from './use-shell-store';

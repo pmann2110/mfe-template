@@ -83,8 +83,12 @@ export function AdminLayoutClient({
                         ? 'bg-primary text-primary-foreground shadow-md'
                         : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-sm'
                     }`}
-                    onMouseEnter={() => remoteName && preloadRemote(remoteName)}
-                    onFocus={() => remoteName && preloadRemote(remoteName)}
+                    onMouseEnter={() =>
+                      remoteName && preloadRemote(remoteName, { init: remoteName === 'users' })
+                    }
+                    onFocus={() =>
+                      remoteName && preloadRemote(remoteName, { init: remoteName === 'users' })
+                    }
                   >
                     <Icon className={`h-4 w-4 transition-transform ${isActive ? '' : 'group-hover:scale-110'}`} />
                     {item.label}
@@ -125,7 +129,7 @@ export function AdminLayoutClient({
                   <div className="flex flex-col items-center justify-center py-8">
                     <Bell className="mb-2 h-10 w-10 text-muted-foreground/30" />
                     <p className="text-sm font-medium text-muted-foreground">No new notifications</p>
-                    <p className="text-xs text-muted-foreground/60">You're all caught up!</p>
+                    <p className="text-xs text-muted-foreground/60">You&apos;re all caught up!</p>
                   </div>
                 ) : (
                   <div className="max-h-[400px] overflow-y-auto">

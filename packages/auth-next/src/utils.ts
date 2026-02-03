@@ -6,14 +6,15 @@ import type { Session as CoreSession } from '@repo/auth-core';
  */
 export function toCoreSession(session: Session | null): CoreSession | null {
   if (!session?.user) return null;
+  const { user } = session;
 
   return {
     user: {
-      id: session.user.id,
-      email: session.user.email,
-      name: session.user.name,
-      roles: session.user.roles || [],
-      permissions: session.user.permissions || [],
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      roles: user.roles,
+      permissions: user.permissions,
     },
     token: session.accessToken,
     expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // Default 7 days

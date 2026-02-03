@@ -19,9 +19,7 @@ export interface ShellAppState {
   ui: {
     notifications: Notification[];
   };
-  remotes?: {
-    users?: { loaded: boolean; loading: boolean; error: string | null };
-  };
+  remotes?: Record<string, { loaded: boolean; loading: boolean; error: string | null }>;
 }
 
 export interface ShellAppActions {
@@ -38,9 +36,9 @@ export interface ShellAppActions {
   removeNotification: (notificationId: string) => void;
 
   // Remote actions
-  setRemoteLoading: (remoteName: 'users', loading: boolean) => void;
-  setRemoteLoaded: (remoteName: 'users', loaded: boolean) => void;
-  setRemoteError: (remoteName: 'users', error: string | null) => void;
+  setRemoteLoading: (remoteName: string, loading: boolean) => void;
+  setRemoteLoaded: (remoteName: string, loaded: boolean) => void;
+  setRemoteError: (remoteName: string, error: string | null) => void;
 }
 
 export type ShellStore = ShellAppState & ShellAppActions;

@@ -5,39 +5,31 @@
  * webpack's ModuleFederationPlugin, making it compatible with Turbopack.
  */
 
-interface RemoteConfig {
-  url: string;
-  scope: string;
-  module: string;
-  cssUrl?: string;
-}
-
-interface RemoteConfigExtended extends RemoteConfig {
-  cssUrl?: string;
-}
+import type { RemoteConfig } from '@repo/api-contracts';
 
 // Dynamic remote configurations loaded from external source
-let dynamicRemoteConfigs: Record<string, RemoteConfigExtended> = {};
+let dynamicRemoteConfigs: Record<string, RemoteConfig> = {};
+
+// Promise that resolves when remote config has been loaded (client-side).
+// Consumers must await this before calling getRemoteConfigs() to avoid race.
+let configReadyPromise: Promise<void> | null = null;
 
 // Function to load dynamic configurations
 async function loadDynamicRemoteConfigs(): Promise<void> {
   try {
-    // Try to load from a config file or API endpoint
-    // For now, we'll use a simple approach to fetch from a JSON file
     const response = await fetch('/config/remote-configs.json');
     if (response.ok) {
       const loadedConfigs = await response.json();
-      // Extract the current environment's configuration
       const env = process.env.NODE_ENV || 'development';
-      const envConfigs: Record<string, RemoteConfigExtended> = {};
-      
+      const envConfigs: Record<string, RemoteConfig> = {};
+
       for (const [remoteName, remoteConfig] of Object.entries(loadedConfigs)) {
-        const configForEnv = (remoteConfig as Record<string, RemoteConfigExtended>)[env];
+        const configForEnv = (remoteConfig as Record<string, RemoteConfig>)[env];
         if (configForEnv) {
           envConfigs[remoteName] = configForEnv;
         }
       }
-      
+
       dynamicRemoteConfigs = envConfigs;
     }
   } catch (error) {
@@ -45,16 +37,28 @@ async function loadDynamicRemoteConfigs(): Promise<void> {
   }
 }
 
-// Merge default and dynamic configurations
-function getRemoteConfigs(): Record<string, RemoteConfigExtended> {
+// Merge default and dynamic configurations (call only after await getConfigReady())
+function getRemoteConfigs(): Record<string, RemoteConfig> {
   return { ...dynamicRemoteConfigs };
+}
+
+/**
+ * Returns a promise that resolves when remote config is loaded.
+ * Call this before initRemote/loadRemoteComponent/preloadRemote so config is available.
+ */
+export function getConfigReady(): Promise<void> {
+  if (typeof window === 'undefined') {
+    return Promise.resolve();
+  }
+  if (!configReadyPromise) {
+    configReadyPromise = loadDynamicRemoteConfigs();
+  }
+  return configReadyPromise;
 }
 
 // Load dynamic configs when module is imported (client-side only)
 if (typeof window !== 'undefined') {
-  loadDynamicRemoteConfigs().catch(() => {
-    // Silently fail if dynamic config loading fails
-  });
+  configReadyPromise = loadDynamicRemoteConfigs();
 }
 
 // Cache for loaded remotes
@@ -595,6 +599,7 @@ async function importRemoteContainer(
  * Initialize a remote module using Module Federation runtime
  */
 async function initRemote(remoteName: string, importNonce?: string): Promise<void> {
+  await getConfigReady();
   const config = getRemoteConfigs()[remoteName];
   if (!config) {
     throw new Error(`Unknown remote: ${remoteName}`);
@@ -756,6 +761,7 @@ export async function loadRemoteComponent<T = any>(
     initFederationRuntime();
   }
 
+  await getConfigReady();
   const config = getRemoteConfigs()[remoteName];
   if (!config) {
     throw new Error(`Unknown remote: ${remoteName}`);
@@ -874,9 +880,9 @@ export async function loadRemoteComponent<T = any>(
 
     // Now it's safe to execute the factory, which will evaluate the module code
     // and trigger top-level imports of shared modules
-    let module: any;
+    let moduleExports: any;
     try {
-      module = factory();
+      moduleExports = factory();
     } catch (e) {
       const evalMsg = e instanceof Error ? e.message : String(e);
       // The remote's module evaluation can still hit loadShare before the runtime
@@ -917,13 +923,13 @@ export async function loadRemoteComponent<T = any>(
         await ensureRemoteContainerInitialized(remoteName, fresh);
 
         const freshFactory = await fresh.get(config.module);
-        module = freshFactory();
+        moduleExports = freshFactory();
       } else {
         throw e;
       }
     }
 
-    return (module.default || module) as T;
+    return (moduleExports.default || moduleExports) as T;
   };
 
   try {
@@ -991,18 +997,37 @@ export async function loadRemoteComponent<T = any>(
   }
 }
 
+export interface PreloadRemoteOptions {
+  /** When true, initialize the remote in the background so first navigation only pays for get + factory. Default false (prefetch only). */
+  init?: boolean;
+}
+
 /**
- * Preload a remote (useful for prefetching)
+ * Preload a remote (prefetch script, or optionally init in background).
+ * Call getConfigReady() first if you need to block until config is loaded.
  */
-export function preloadRemote(remoteName: string): void {
+export function preloadRemote(remoteName: string, options?: PreloadRemoteOptions): void {
   if (typeof window === 'undefined') return;
-  
-  const config = getRemoteConfigs()[remoteName];
-  if (!config || remoteCache.has(remoteName)) return;
-  
-  const link = document.createElement('link');
-  link.rel = 'prefetch';
-  link.href = config.url;
-  link.as = 'script';
-  document.head.appendChild(link);
+  if (remoteCache.has(remoteName)) return;
+
+  const doPreload = async () => {
+    await getConfigReady();
+    const config = getRemoteConfigs()[remoteName];
+    if (!config) return;
+
+    if (options?.init) {
+      initRemote(remoteName).catch(() => {
+        // Ignore; first navigation will retry
+      });
+      return;
+    }
+
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = config.url;
+    link.as = 'script';
+    document.head.appendChild(link);
+  };
+
+  doPreload();
 }

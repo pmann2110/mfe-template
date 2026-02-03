@@ -21,12 +21,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Map routes to required permissions
-    const routePermissions: Record<string, Permission> = {
-      '/admin/users': 'user:read',
-    };
+    // Map route prefixes to required permissions (prefix match so /admin/users/123 is protected)
+    const routePermissionPrefixes: { prefix: string; permission: Permission }[] = [
+      { prefix: '/admin/users', permission: 'user:read' },
+    ];
 
-    const requiredPermission = routePermissions[path];
+    const entry = routePermissionPrefixes.find((e) => path.startsWith(e.prefix));
+    const requiredPermission = entry?.permission;
     if (requiredPermission && session.user) {
       const permissions = session.user.permissions || [];
       if (!canWithPermissions(requiredPermission, permissions)) {
