@@ -14,6 +14,14 @@ function generateNotificationId(): string {
   return `notification-${String(Date.now())}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
+/** Initial state for SSR/getServerSnapshot so hydration matches (server never mutates store). */
+export const INITIAL_SHELL_APP_STATE: ShellAppState = {
+  auth: { session: null },
+  tenant: { tenantId: null },
+  ui: { notifications: [] },
+  remotes: {},
+};
+
 function createShellStore(initialState?: Partial<ShellAppState>): StoreApi<ShellStore> {
   return createStore<ShellStore>((set, _get) => ({
     // Initial state

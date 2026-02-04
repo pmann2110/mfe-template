@@ -16,18 +16,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
@@ -35,7 +35,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Cache Turbo build
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .turbo
           key: turbo-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -47,16 +47,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
@@ -72,16 +72,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
@@ -97,16 +97,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
@@ -122,16 +122,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
@@ -142,7 +142,7 @@ jobs:
         run: pnpm run build
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
@@ -150,98 +150,57 @@ jobs:
             apps/web-shell/.next
             apps/users-remote/dist
 
-  deploy-staging:
-    name: Deploy to Staging
+  deploy:
+    name: Deploy
     needs: build
-    if: github.ref == 'refs/heads/develop'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+      DEPLOY_PROD: ${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: build-artifacts
 
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Deploy to Vercel (Staging)
+      - name: Deploy Admin Shell
         run: |
           cd apps/admin-shell
-          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+          vercel pull --yes --environment=$DEPLOY_ENV --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt $DEPLOY_PROD --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_ADMIN_SHELL_PROJECT_ID }}
 
-      - name: Deploy Web Shell to Vercel (Staging)
+      - name: Deploy Web Shell
         run: |
           cd apps/web-shell
-          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+          vercel pull --yes --environment=$DEPLOY_ENV --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt $DEPLOY_PROD --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEB_SHELL_PROJECT_ID }}
 
-      - name: Deploy Users Remote to Vercel (Staging)
+      - name: Deploy Users Remote
         run: |
           cd apps/users-remote
-          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_USERS_REMOTE_PROJECT_ID }}
-
-  deploy-production:
-    name: Deploy to Production
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: build-artifacts
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Deploy Admin Shell to Vercel (Production)
-        run: |
-          cd apps/admin-shell
-          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --prod --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_ADMIN_SHELL_PROJECT_ID }}
-
-      - name: Deploy Web Shell to Vercel (Production)
-        run: |
-          cd apps/web-shell
-          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --prod --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEB_SHELL_PROJECT_ID }}
-
-      - name: Deploy Users Remote to Vercel (Production)
-        run: |
-          cd apps/users-remote
-          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --prod --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+          vercel pull --yes --environment=$DEPLOY_ENV --token=${{ secrets.VERCEL_TOKEN }}
+          vercel deploy --prebuilt $DEPLOY_PROD --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_USERS_REMOTE_PROJECT_ID }}
 
   notify:
     name: Notify
-    needs: [deploy-staging, deploy-production]
-    if: always()
+    needs: [build, deploy]
+    if: always() && (needs.build.result == 'success' || needs.deploy.result == 'success' || needs.deploy.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - name: Send Slack notification

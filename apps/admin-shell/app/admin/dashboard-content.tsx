@@ -3,14 +3,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui';
 import type { Session } from 'next-auth';
 import { canWithPermissions } from '@repo/rbac';
+import type { Permission } from '@repo/rbac';
 
 interface DashboardContentProps {
   session: Session;
 }
 
 export function DashboardContent({ session }: DashboardContentProps) {
-  const can = (permission: string) =>
-    canWithPermissions(permission as any, session.user.permissions || []);
+  const can = (permission: Permission) =>
+    canWithPermissions(permission, session.user.permissions || []);
 
   const stats = [
     {

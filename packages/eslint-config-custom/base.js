@@ -2,10 +2,13 @@ const { resolve } = require('node:path');
 
 module.exports = {
   extends: [
-    '@vercel/style-guide/eslint/browser',
-    '@vercel/style-guide/eslint/node',
-    '@vercel/style-guide/eslint/typescript',
-  ].map((config) => require.resolve(config)),
+    require.resolve('@vercel/style-guide/eslint/browser'),
+    require.resolve('@vercel/style-guide/eslint/node'),
+    require.resolve('@vercel/style-guide/eslint/typescript'),
+    'plugin:jsx-a11y/recommended',
+  ],
+
+  plugins: ['jsx-a11y'],
 
   ignorePatterns: ['node_modules/', 'dist/'],
   rules: {

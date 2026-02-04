@@ -1,47 +1,50 @@
 /**
- * Single source of truth for admin route protection. All permission checks for
- * /admin/* routes are enforced here using ADMIN_ROUTES. Page-level canWithPermissions
- * checks are optional defense-in-depth only.
+ * Single source of truth for admin route protection. Permission checks for
+ * /admin/* are enforced here when session is available.
  *
- * Uses NextAuth v5 auth() as a wrapper so session is available as req.auth in Edge
- * (calling await auth() directly in middleware can return null on Edge).
+ * IMPORTANT: In NextAuth v5, auth() and the auth() wrapper can return null / run
+ * authorized() with null in Edge middleware even when the user has a valid JWT.
+ * So we do NOT redirect to /login from middleware when session is null—we let
+ * the admin layout (server component, Node.js) do that. That way navigation to
+ * /admin/users works; the layout's auth() sees the session and renders.
+ * When we do have a session here, we enforce permission and redirect to
+ * /admin/unauthorized when needed.
  */
 import { auth } from '@repo/auth-next';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { canWithPermissions } from '@repo/rbac';
 import { ADMIN_ROUTES } from './lib/admin-routes';
 
-export default auth((req) => {
-  const session = req.auth;
-  const path = req.nextUrl.pathname;
+export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
 
-  // Skip for login page and API routes (matcher already limits to /admin/*, but be explicit)
   if (path === '/login' || path.startsWith('/api')) {
     return NextResponse.next();
   }
 
-  // Redirect to login if not authenticated
+  const session = await auth();
+
+  // Do not redirect to login from Edge when session is null; layout will do it.
+  // (Session is often null in Edge despite valid JWT, which caused redirect loop.)
   if (!session) {
-    if (path.startsWith('/admin')) {
-      return NextResponse.redirect(new URL('/login', req.nextUrl));
-    }
     return NextResponse.next();
   }
 
-  // Permission check from single source of truth (longest prefix match: /admin/users/123 -> user:read)
+  // Permission check from single source of truth (longest prefix match)
   const routesWithPermission = ADMIN_ROUTES.filter((r) => path.startsWith(r.path) && r.permission != null);
   const route = routesWithPermission.length
     ? routesWithPermission.sort((a, b) => b.path.length - a.path.length)[0]
     : undefined;
   if (route?.permission && session.user) {
-    const permissions = (session.user as { permissions?: string[] }).permissions ?? [];
+    const permissions = session.user.permissions ?? [];
     if (!canWithPermissions(route.permission, permissions)) {
-      return NextResponse.redirect(new URL('/admin/unauthorized', req.nextUrl));
+      return NextResponse.redirect(new URL('/admin/unauthorized', request.url));
     }
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ['/admin/:path*'],

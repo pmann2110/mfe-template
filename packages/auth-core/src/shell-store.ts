@@ -1,7 +1,7 @@
 /**
  * Auth-focused shell store for login/logout/rehydrate and permission checks.
  * Use this for non-Next.js shells or standalone remotes that need their own auth client.
- * The admin-shell uses NextAuth + @repo/stores (initShellStore/getShellStore) instead;
+ * The admin-shell uses NextAuth + \@repo/stores (initShellStore/getShellStore) instead;
  * do not use createShellStore in Next.js shells that use auth-next.
  */
 import { createStore, type StoreApi } from 'zustand/vanilla';

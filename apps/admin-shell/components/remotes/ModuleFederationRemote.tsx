@@ -1,12 +1,47 @@
 'use client';
 
-import { useEffect, useState, Suspense, useCallback } from 'react';
+import { useEffect, useState, Suspense, useCallback, Component, type ReactNode } from 'react';
 import { Card, CardContent, CardHeader, Button } from '@repo/ui';
 import { loadRemoteComponent } from '../../lib/module-federation-loader';
 import { getShellStore } from '@repo/stores';
 import type { Session as CoreSession } from '@repo/auth-core';
 
 import type { RoutingProps } from '@repo/api-contracts';
+
+/** Error boundary around the loaded remote so a render throw does not crash the shell. */
+class RemoteErrorBoundary extends Component<
+  { remoteName: string; fallback: ReactNode; children: ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  state = { hasError: false, error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('Remote render error:', error);
+  }
+
+  render() {
+    if (this.state.hasError && this.state.error) {
+      return (
+        <div className="flex h-64 flex-col items-center justify-center gap-4">
+          <div className="text-destructive text-center">
+            <p className="font-semibold">{this.state.error.message || 'Remote error'}</p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => this.setState({ hasError: false, error: null })}
+          >
+            Retry
+          </Button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface ModuleFederationRemoteProps {
   remoteName: string;
@@ -143,8 +178,10 @@ export function ModuleFederationRemote({
   }
 
   return (
-    <Suspense fallback={fallback}>
-      <Component session={session} routingProps={routingProps} />
-    </Suspense>
+    <RemoteErrorBoundary remoteName={remoteName} fallback={fallback}>
+      <Suspense fallback={fallback}>
+        <Component session={session} routingProps={routingProps} />
+      </Suspense>
+    </RemoteErrorBoundary>
   );
 }

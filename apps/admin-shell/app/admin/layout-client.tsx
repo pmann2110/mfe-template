@@ -11,7 +11,7 @@ import type { Session } from 'next-auth';
 import { initShellStore, useNotifications, useShellActions } from '@repo/stores';
 import { toCoreSession } from '@repo/auth-next';
 import { preloadRemote } from '../../lib/module-federation-loader';
-import { ADMIN_ROUTES, type AdminRouteIcon } from '../../lib/admin-routes';
+import { ADMIN_ROUTES, canAccessRoute, type AdminRouteIcon } from '../../lib/admin-routes';
 
 const ICON_MAP: Record<AdminRouteIcon, React.ComponentType<{ className?: string }>> = {
   dashboard: LayoutDashboard,
@@ -46,10 +46,8 @@ export function AdminLayoutClient({
     await signOut({ callbackUrl: '/login' });
   };
 
-  const navItems = ADMIN_ROUTES.filter(
-    (item) =>
-      !item.permission ||
-      session.user.permissions?.includes(item.permission),
+  const navItems = ADMIN_ROUTES.filter((item) =>
+    canAccessRoute(session.user.permissions ?? [], item),
   );
 
   return (

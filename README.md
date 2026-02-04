@@ -175,6 +175,7 @@ This will start:
 - **[Packages Strategy](docs/PACKAGES_STRATEGY.md)**: Shared package management and versioning
 - **[CSS Configuration](docs/CSS_CONFIGURATION_STRATEGY.md)**: CSS and Tailwind setup
 - **[State and Auth](docs/STATE_AND_AUTH.md)**: When to use `@repo/stores` vs `auth-core`’s `createShellStore`
+- **[Runbook](docs/RUNBOOK.md)**: Common incidents (remote fails to load, auth redirect loops) and fixes
 - **[Architecture Diagrams](docs/MFE.drawio.xml)**: Visual architecture documentation
 
 ## Conclusion

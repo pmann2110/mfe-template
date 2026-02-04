@@ -1,7 +1,12 @@
 import { useSyncExternalStore } from 'react';
 import type { Session } from '@repo/auth-core';
 import type { ShellStore, Notification } from './shell-types';
-import { getShellStore } from './shell-store';
+import { getShellStore, INITIAL_SHELL_APP_STATE } from './shell-store';
+
+/** Stable initial snapshot for SSR so hydration matches (server never mutates store). */
+function getServerSnapshot<T>(selector: (state: ShellStore) => T): T {
+  return selector(INITIAL_SHELL_APP_STATE as unknown as ShellStore);
+}
 
 export function useShellStore<T>(selector: (state: ShellStore) => T): T {
   const store = getShellStore();
@@ -9,7 +14,7 @@ export function useShellStore<T>(selector: (state: ShellStore) => T): T {
   return useSyncExternalStore(
     store.subscribe,
     () => selector(store.getState()),
-    () => selector(store.getState()) // No server-side fallback since we don't SSR the store
+    () => getServerSnapshot(selector)
   );
 }
 

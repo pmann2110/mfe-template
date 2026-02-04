@@ -1,4 +1,5 @@
 import type { Permission } from '@repo/rbac';
+import { canWithPermissions } from '@repo/rbac';
 
 /**
  * Single source of truth for admin routes and permissions.
@@ -26,3 +27,17 @@ export const ADMIN_ROUTES = [
 ] as const;
 
 export type AdminRouteIcon = (typeof ADMIN_ROUTES)[number]['icon'];
+
+/**
+ * Whether the user can access a route given their permissions.
+ * Use this for nav visibility and any route-level permission checks.
+ */
+export function canAccessRoute(
+  permissions: string[] | null | undefined,
+  route: (typeof ADMIN_ROUTES)[number],
+): boolean {
+  if (!route.permission) return true;
+  return canWithPermissions(route.permission, permissions ?? []);
+}
+
+export type { Permission } from '@repo/rbac';

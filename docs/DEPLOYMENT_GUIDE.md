@@ -58,9 +58,10 @@ Configure these in Vercel dashboard:
 ```
 NEXTAUTH_URL=https://your-domain.com
 NEXTAUTH_SECRET=your-secret-key
-API_BASE_URL=https://your-api-domain.com
 NODE_ENV=production
 ```
+
+**Optional (for future use):** `API_BASE_URL` is not used by the current codebase. When you add a real backend for remotes (e.g. users-remote), set `API_BASE_URL` and wire it into your API client; until then, remotes use mock data.
 
 **Production requirements:** In production, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are required; the app will throw at startup if either is missing. Do not rely on fallbacks in production.
 

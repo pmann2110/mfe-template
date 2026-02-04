@@ -77,7 +77,8 @@ export default defineConfig(({ command, mode }) => {
       output: {
         assetFileNames: (assetInfo) => {
           if (assetInfo.name?.endsWith('.css')) {
-            return 'assets/[name].css';
+            // Single predictable name so remote-configs.json cssUrl works (e.g. .../assets/style.css)
+            return 'assets/style.css';
           }
           return 'assets/[name]-[hash][extname]';
         },

@@ -1,13 +1,23 @@
 import type { Session, Permission } from '@repo/auth-core';
 
+/**
+ * Check permission using session (roles + permissions).
+ * Prefer session.user.permissions when available; fall back to admin role for full access.
+ */
 export function can(permission: Permission, session: Session | null): boolean {
   if (!session) return false;
 
-  // Admin has all permissions
+  // Admin role has all permissions
   if (session.user.roles.includes('admin')) return true;
 
-  // Check if user has the specific permission as a role
-  return session.user.roles.includes(permission);
+  // Use permissions array when present (e.g. NextAuth session)
+  const permissions = session.user.permissions;
+  if (Array.isArray(permissions) && permissions.length > 0) {
+    if (permissions.includes('admin:access')) return true;
+    return permissions.includes(permission);
+  }
+
+  return false;
 }
 
 /**
