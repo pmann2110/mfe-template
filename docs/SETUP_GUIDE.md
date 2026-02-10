@@ -44,6 +44,7 @@ Minimum required variables:
 Notes:
 - The current auth implementation is **mock credentials** (see `packages/auth-next/src/auth-options.ts`). If you add a real backend, you can introduce an `API_BASE_URL` (or similar) and wire it into `validateCredentials()`.
 - `users-remote` can run in **federated mode** (default) or **standalone mode** using `STANDALONE_MODE=true`.
+- **users-remote API source:** Set `VITE_USE_MOCK_API=false` and `VITE_API_BASE_URL=<base URL>` to use the shared API client (real backend). Default is mock (`VITE_USE_MOCK_API=true` or unset).
 
 ---
 
@@ -195,6 +196,21 @@ The project includes a GitHub Actions workflow for CI/CD. The workflow:
 - Runs tests on push to main branch
 - Builds and deploys applications on push to production branch
 - Runs linting and formatting checks
+
+#### Optional CI/CD secrets
+
+Configure these in your repository secrets when needed:
+
+| Secret | Used by | Purpose |
+|--------|---------|--------|
+| `TURBO_TOKEN` | Turbo (CI) | Remote cache (optional; speeds builds). |
+| `TURBO_TEAM` | Turbo (CI) | Team id for remote cache. |
+| `VERCEL_TOKEN` | Deploy job | Vercel CLI auth for prebuilt deploys. |
+| `VERCEL_ORG_ID` | Deploy job | Vercel organization id. |
+| `VERCEL_PROJECT_ID` / `VERCEL_ADMIN_SHELL_PROJECT_ID` etc. | Deploy job | Per-app Vercel project ids. |
+| `SLACK_WEBHOOK` | Notify job | Optional Slack notifications on build/deploy (uses `rtCamp/action-slack-notify`). |
+
+See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for production env vars and deployment steps.
 
 ---
 

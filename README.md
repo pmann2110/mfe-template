@@ -87,6 +87,9 @@ The project is organized into two main directories:
 - **ESLint**: Custom configuration (`@repo/eslint-config-custom`)
 - **Prettier**: ^3.4.2
 
+### Version overrides (pnpm)
+Root `package.json` uses `pnpm.overrides` to pin transitive dependencies (e.g. `path-to-regexp`, `vite`, `cookie`, `tailwindcss`, `brace-expansion`, `js-yaml`, `@tailwindcss/*`) for consistent installs and to avoid version drift across the monorepo. When upgrading, update overrides in one place and run `pnpm install`; re-run tests and typecheck to confirm compatibility.
+
 ---
 
 ## Infrastructure and Build Setup

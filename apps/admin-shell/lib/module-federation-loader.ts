@@ -395,17 +395,15 @@ async function ensureRemoteContainerInitialized(
     return;
   }
 
-  // Special handling for server restart scenario in development
+  // Special handling for server restart scenario in development: clear caches and throw so caller can retry (no full page reload)
   if (process.env.NODE_ENV === 'development') {
-    // Check if we have a cached container for this remote name
     const cachedContainer = remoteCache.get(remoteName);
-    // If we have a cached container but it's a different instance, we need to clean up
     if (cachedContainer && cachedContainer !== container) {
-      console.warn(`[MF] Detected container instance change for ${remoteName} (server restart?), forcing browser reload for clean state`);
-      // Force a hard reload to ensure completely clean state
-      // This is the most reliable way to handle server restarts in development
-      window.location.reload();
-      return; // This line will never be reached, but keeps TypeScript happy
+      console.warn(`[MF] Detected container instance change for ${remoteName} (server restart?). Clearing caches for retry.`);
+      containerInitPromises.delete(cachedContainer);
+      remoteCache.delete(remoteName);
+      loading.delete(remoteName);
+      throw new Error(`[MF] Container instance changed for ${remoteName}; retry will re-import.`);
     }
   }
 
@@ -482,25 +480,21 @@ async function ensureRemoteContainerInitialized(
     }
   })();
 
-  // Direct handling for "Please call init first" error in development
+  // Direct handling for "Please call init first" error in development: clear caches and throw so caller can retry (no full page reload)
   if (process.env.NODE_ENV === 'development') {
     try {
-      // Try to call container.get() to see if we get the specific error
       if (container.get) {
-        await container.get('./app'); // Use a default module path
+        await container.get('./app');
       }
     } catch (getError) {
       const getErrMsg = getError instanceof Error ? getError.message : String(getError);
-      
-      // If we get the specific "Please call init first" error, force a reload
       if (getErrMsg.includes('Please call init first')) {
-        console.warn(`[MF] Detected corrupted federation runtime state for ${remoteName}, forcing browser reload`);
-        // Force a hard reload to ensure completely clean state
-        window.location.reload();
-        return; // This line will never be reached, but keeps TypeScript happy
+        console.warn(`[MF] Detected "Please call init first" for ${remoteName}. Clearing caches for retry.`);
+        containerInitPromises.delete(container);
+        remoteCache.delete(remoteName);
+        loading.delete(remoteName);
+        throw new Error(`[MF] Init-first error for ${remoteName}; retry will re-import.`);
       }
-      
-      // If it's a different error, re-throw it
       throw getError;
     }
   }

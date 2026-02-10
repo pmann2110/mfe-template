@@ -9,6 +9,9 @@
  * /admin/users works; the layout's auth() sees the session and renders.
  * When we do have a session here, we enforce permission and redirect to
  * /admin/unauthorized when needed.
+ *
+ * CORS (production): For /config and /api, we set Access-Control-Allow-Origin
+ * to the request Origin when it is in NEXT_PUBLIC_ALLOWED_REMOTE_ORIGINS.
  */
 import { auth } from '@repo/auth-next';
 import { NextResponse } from 'next/server';
@@ -16,11 +19,38 @@ import type { NextRequest } from 'next/server';
 import { canWithPermissions } from '@repo/rbac';
 import { ADMIN_ROUTES } from './lib/admin-routes';
 
+function getProductionCorsResponse(request: NextRequest, response: NextResponse): NextResponse {
+  const origin = request.headers.get('origin');
+  if (!origin) return response;
+  const allowed =
+    (process.env.NEXT_PUBLIC_ALLOWED_REMOTE_ORIGINS || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  if (!allowed.includes(origin)) return response;
+  response.headers.set('Access-Control-Allow-Origin', origin);
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   if (path === '/login' || path.startsWith('/api')) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    if (process.env.NODE_ENV === 'production' && (path.startsWith('/api') || path.startsWith('/config'))) {
+      return getProductionCorsResponse(request, res);
+    }
+    return res;
+  }
+
+  if (path.startsWith('/config')) {
+    const res = NextResponse.next();
+    if (process.env.NODE_ENV === 'production') {
+      return getProductionCorsResponse(request, res);
+    }
+    return res;
   }
 
   const session = await auth();
@@ -47,5 +77,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin/:path*', '/api/:path*', '/config/:path*'],
 };

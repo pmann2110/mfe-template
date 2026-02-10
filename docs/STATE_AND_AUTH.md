@@ -15,6 +15,7 @@ This document clarifies when to use **`@repo/stores`** (shell store) vs **`@repo
 
 - **Purpose:** Single global store for the **host shell and all federated remotes**: session snapshot, tenant, UI notifications, per-remote loading/error state.
 - **Initialization:** The **Next.js shell** calls `initShellStore({ auth: { session: toCoreSession(session) } })` after auth. Remotes call `getShellStore()` (auto-inits if missing).
+- **Session flow:** Shell inits the store once; remotes receive session via props and may read the store for notifications only. Keep session as the single source of truth from the shell.
 - **Where:** Used by admin-shell (layout-client), users-remote (notifications, etc.), and the module-federation loader (remote loading state).
 - **Do not** use `createShellStore` from auth-core in a Next.js shell that already uses NextAuth and `@repo/stores`; you would have two sources of auth state.
 

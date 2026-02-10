@@ -44,6 +44,7 @@ async function validateCredentials(
   };
 }
 
+// Production: require secrets; never use fallback. Fallback must never be used when NODE_ENV === 'production'.
 if (process.env.NODE_ENV === 'production') {
   if (!process.env.NEXTAUTH_SECRET || !process.env.NEXTAUTH_URL) {
     throw new Error(
@@ -61,6 +62,20 @@ if (process.env.NODE_ENV === 'production') {
   }
 }
 
+function getSecret(): string {
+  if (process.env.NODE_ENV === 'production') {
+    if (!process.env.NEXTAUTH_SECRET) {
+      throw new Error('NEXTAUTH_SECRET is required in production. Fallback must never be used.');
+    }
+    return process.env.NEXTAUTH_SECRET;
+  }
+  return process.env.NEXTAUTH_SECRET ?? 'fallback-secret-for-development';
+}
+
+/**
+ * Credentials provider is for DEMO only: it accepts any password and maps email to roles.
+ * For production, use a real IdP (OAuth/OIDC) or backend validation (e.g. API route + adapter).
+ */
 export const authConfig: NextAuthConfig = {
   providers: [
     CredentialsProvider({
@@ -127,7 +142,7 @@ export const authConfig: NextAuthConfig = {
     maxAge: 30 * 24 * 60 * 60,
     updateAge: 24 * 60 * 60,
   },
-  secret: process.env.NEXTAUTH_SECRET ?? 'fallback-secret-for-development',
+  secret: getSecret(),
   trustHost: true,
   useSecureCookies: process.env.NODE_ENV === 'production',
   debug: process.env.NODE_ENV === 'development',

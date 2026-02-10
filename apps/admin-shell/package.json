@@ -11,11 +11,11 @@
   },
   "dependencies": {
     "@repo/api-contracts": "workspace:*",
-    "@repo/tailwind-config": "workspace:*",
     "@repo/auth-core": "workspace:*",
     "@repo/auth-next": "workspace:*",
     "@repo/rbac": "workspace:*",
     "@repo/stores": "workspace:*",
+    "@repo/tailwind-config": "workspace:*",
     "@repo/ui": "workspace:*",
     "lucide-react": "^0.454.0",
     "next": "^15.1.6",

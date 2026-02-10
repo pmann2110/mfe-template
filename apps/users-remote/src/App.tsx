@@ -7,7 +7,7 @@ import {
   Route,
 } from 'react-router-dom';
 import type { User, CreateUserRequest, UpdateUserRequest } from '@repo/api-contracts';
-import { mockUserApi } from './data/mock-users';
+import { userApi } from './data/user-api';
 import type { Session as CoreSession } from '@repo/auth-core';
 import { getShellStore } from '@repo/stores';
 import { useUsersUIStore } from './state/users-ui-store';
@@ -67,7 +67,7 @@ export default function UsersApp({ session: propSession, routingProps }: UsersAp
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const data = await mockUserApi.list();
+      const data = await userApi.list();
       setUsers(data);
     } catch (error) {
       console.error('Failed to load users:', error);
@@ -96,7 +96,7 @@ export default function UsersApp({ session: propSession, routingProps }: UsersAp
     if (!confirm('Are you sure you want to delete this user?')) return;
     try {
       const userToDelete = users.find(u => u.id === id);
-      await mockUserApi.delete(id);
+      await userApi.delete(id);
       getShellStore().getState().addNotification({
         type: 'warning',
         title: 'User Deleted',
@@ -114,14 +114,14 @@ export default function UsersApp({ session: propSession, routingProps }: UsersAp
     setIsSubmitting(true);
     try {
       if (editingUser) {
-        await mockUserApi.update(editingUser.id, formData as UpdateUserRequest);
+        await userApi.update(editingUser.id, formData as UpdateUserRequest);
         getShellStore().getState().addNotification({
           type: 'success',
           title: 'User Updated',
           message: `${formData.name}'s profile has been updated successfully.`,
         });
       } else {
-        await mockUserApi.create(formData);
+        await userApi.create(formData);
         getShellStore().getState().addNotification({
           type: 'success',
           title: 'User Created',

@@ -3,6 +3,7 @@ import { canWithPermissions } from '@repo/rbac';
 
 /**
  * Single source of truth for admin routes and permissions.
+ * Permission type is re-exported from @repo/auth-core via @repo/rbac; shells depend on @repo/rbac for route checks.
  * Used by middleware (permission checks) and layout-client (nav items, preload).
  *
  * - path: route path (used for middleware longest-prefix match and nav links)

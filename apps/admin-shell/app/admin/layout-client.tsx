@@ -80,10 +80,10 @@ export function AdminLayoutClient({
                         : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-sm'
                     }`}
                     onMouseEnter={() =>
-                      remoteName && preloadRemote(remoteName, { init: !!remoteName })
+                      remoteName && preloadRemote(remoteName)
                     }
                     onFocus={() =>
-                      remoteName && preloadRemote(remoteName, { init: !!remoteName })
+                      remoteName && preloadRemote(remoteName)
                     }
                   >
                     <Icon className={`h-4 w-4 transition-transform ${isActive ? '' : 'group-hover:scale-110'}`} />
