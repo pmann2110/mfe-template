@@ -1,6 +1,6 @@
 # Packages Strategy
 
-This document outlines the strategy for managing shared packages in the project, including versioning, publishing to private repositories, and consuming versioned packages.
+This document outlines the shared packages in the monorepo, how they are used, and how to manage versioning and publishing.
 
 ## Table of Contents
 
@@ -8,114 +8,67 @@ This document outlines the strategy for managing shared packages in the project,
 - [Publishing Shared Packages](#publishing-shared-packages)
 - [Versioning Strategy](#versioning-strategy)
 - [Consuming Versioned Packages](#consuming-versioned-packages)
-- [Example Workflow](#example-workflow)
 
 ## Current Project Structure
 
-The project is structured as a monorepo using pnpm workspaces. Shared packages are located in the `packages` directory and are currently marked as `private: true` in their `package.json` files. These packages are referenced in other parts of the project using the `workspace:*` syntax.
+The project is a pnpm workspace monorepo. Shared packages live under `packages/` and are referenced with `workspace:*`. The repo uses [Changesets](https://github.com/changesets/changesets) for versioning (run `pnpm changeset` to add a changeset).
 
-### Shared Packages
+### Shared packages (full list)
 
-1. **`@repo/api-contracts`**: Contains API contracts and types for users.
-2. **`@repo/auth-core`**: Provides authentication logic and types.
-3. **`@repo/ui`**: Contains UI components and styles.
+| Package | Purpose | Used by |
+|--------|---------|---------|
+| `@repo/api-contracts` | API interfaces, routing types, data models (e.g. `User`, `UserApi`, `RemoteConfig`, `ApiResult`) | Shells, remotes, api-client |
+| `@repo/api-client` | Shared API client implementation (e.g. `createUserApiClient`) using fetch and `API_BASE_URL` | Remotes (e.g. users-remote when not using mock) |
+| `@repo/auth-core` | Core auth types, session, auth client, optional `createShellStore` for non–Next.js shells | Shells, remotes, auth-next, rbac |
+| `@repo/auth-next` | NextAuth.js v5 config (authOptions, callbacks) for Next.js shells | admin-shell, web-shell |
+| `@repo/rbac` | Role-based access control (permissions, `canWithPermissions`) | Shells, remotes |
+| `@repo/remote-utils` | RouterSync, StandaloneAuthProvider for remotes | Remotes (e.g. users-remote) |
+| `@repo/stores` | Global shell store (Zustand singleton): session snapshot, notifications, remote loading state | Shells, remotes |
+| `@repo/ui` | Shared UI components and `globals.css` design tokens (Tailwind v4, Radix) | All apps |
+| `@repo/tailwind-config` | Shared Tailwind base config (theme, dark mode, plugins) | All apps |
+| `@repo/ts-config` | Shared TypeScript base config | All packages/apps |
+| `@repo/logger` | Logging utilities | Optional in apps |
+| `@repo/eslint-config-custom` | Shared ESLint configuration | All packages/apps |
 
 ## Publishing Shared Packages
 
-To publish shared packages to a private repository (e.g., GitHub Packages, npm private registry, or an alternative like Verdaccio), follow these steps:
+To publish packages to a private registry (e.g. GitHub Packages, npm private registry):
 
 ### 1. Update `package.json`
 
-- Remove the `private: true` field from the `package.json` of the packages you want to publish.
-- Ensure the `name` field follows the naming convention of your private registry (e.g., `@your-org/package-name`).
+- Remove `private: true` for packages you want to publish.
+- Set `name` to your registry scope (e.g. `@your-org/api-contracts`).
 
-### 2. Configure Authentication
+### 2. Configure authentication
 
-- For npm private registry, configure authentication in `.npmrc`:
-  ```ini
-  //registry.npmjs.org/:_authToken=your-token
-  ```
-
-- For GitHub Packages, configure authentication in `.npmrc`:
+- **pnpm** uses `.npmrc`. For a private registry:
   ```ini
   @your-org:registry=https://npm.pkg.github.com
-  //npm.pkg.github.com/:_authToken=your-github-token
+  //npm.pkg.github.com/:_authToken=${NPM_TOKEN}
   ```
 
-### 3. Publish the Package
+### 3. Publish
 
-- Run the following command to publish the package:
+- With Changesets: run `pnpm version-packages` then `pnpm release` (or your pipeline).
+- Manual publish with pnpm:
   ```bash
-  npm publish
+  cd packages/api-contracts
+  pnpm publish --no-git-checks
   ```
-
-- For GitHub Packages, use:
-  ```bash
-  npm publish --registry=https://npm.pkg.github.com
-  ```
+- For GitHub Packages, ensure `.npmrc` or publish config points to the correct registry.
 
 ## Versioning Strategy
 
-Versioning is critical for managing shared packages. Here’s how it works:
-
-### 1. Semantic Versioning
-
-- Use semantic versioning (`MAJOR.MINOR.PATCH`) to indicate the type of changes:
-  - `MAJOR`: Breaking changes.
-  - `MINOR`: New features (backward-compatible).
-  - `PATCH`: Bug fixes (backward-compatible).
-
-### 2. Updating Version
-
-- Manually update the `version` field in `package.json` or use tools like `npm version`:
-  ```bash
-  npm version patch
-  npm version minor
-  npm version major
-  ```
-
-### 3. Changelog
-
-- Maintain a changelog to document changes for each version.
+- Use **semantic versioning** (MAJOR.MINOR.PATCH): breaking = MAJOR, new features = MINOR, fixes = PATCH.
+- Prefer **Changesets**: add a changeset with `pnpm changeset`, then use `pnpm version-packages` and `pnpm release` in CI or locally.
+- Manually: update `version` in `package.json` or use `pnpm version patch|minor|major` in the package directory.
 
 ## Consuming Versioned Packages
 
-To use versioned packages in your project:
-
-### 1. Update Dependencies
-
-- Replace the `workspace:*` reference in `package.json` with the specific version of the package:
-  ```json
-  "@your-org/api-contracts": "^1.0.0"
-  ```
-
-### 2. Install the Package
-
-- Run `pnpm install` to fetch the versioned package from the private registry.
-
-### 3. Verify Installation
-
-- Ensure the package is correctly installed and resolved in `node_modules`.
-
-## Example Workflow
-
-### 1. Publish a Package
-
-- Update the version in `packages/api-contracts/package.json` to `1.0.0`.
-- Run `npm publish` to push it to the private registry.
-
-### 2. Use the Published Package
-
-- In another project or app, update the dependency:
-  ```json
-  "@your-org/api-contracts": "^1.0.0"
-  ```
-- Run `pnpm install` to fetch and use the published package.
+- **Inside the monorepo:** Keep `workspace:*` so you always use the local workspace version.
+- **Outside the monorepo:** Depend on the published version (e.g. `"@your-org/api-contracts": "^1.0.0"`) and run `pnpm install`. Replace `@repo` with your org scope when publishing.
 
 ## Additional Notes
 
-- **Authentication**: Ensure that the token in `.npmrc` has the necessary permissions to read and publish packages.
-- **Scope**: Replace `@repo` with your organization's scope (e.g., `@your-org`) when publishing to a private repository.
-- **Registry Configuration**: Ensure that the `.npmrc` file is correctly configured to point to the private repository's registry endpoint.
-
-By following these steps, you can effectively manage versioning and distribution of shared packages in a private repository.
+- **Scope:** The repo uses `@repo` as the workspace scope; replace with your organization scope when publishing.
+- **Registry:** Ensure `.npmrc` and any CI secrets (e.g. `NPM_TOKEN`) are set for the registry you use.

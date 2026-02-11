@@ -3,7 +3,8 @@
  * Use when USE_MOCK_API is not set (production or E2E with real backend).
  */
 
-import { apiErrorFromResponse, ApiError } from './result';
+import { apiErrorFromResponse } from './result';
+import type { ApiError } from './result';
 import type {
   User,
   UserApi,
@@ -44,7 +45,12 @@ export function createUserApiClient(baseUrl: string): UserApi {
       } catch {
         body = await response.text();
       }
-      throw await apiErrorFromResponse(response, body);
+      const apiErr = apiErrorFromResponse(response, body);
+      const err = Object.assign(new Error(apiErr.message), {
+        code: apiErr.code,
+        status: apiErr.status,
+      });
+      throw err;
     }
 
     if (!parseJson) return undefined as T;
@@ -67,7 +73,7 @@ export function createUserApiClient(baseUrl: string): UserApi {
         body: JSON.stringify(data),
       }),
     delete: (id: string) =>
-      request<void>(`/users/${encodeURIComponent(id)}`, {
+      request<undefined>(`/users/${encodeURIComponent(id)}`, {
         method: 'DELETE',
         parseJson: false,
       }),

@@ -56,12 +56,17 @@ export const mockUserApi = {
   ): Promise<User> => {
     const index = mockUsers.findIndex((u) => u.id === id);
     if (index === -1) throw new Error('User not found');
-    mockUsers[index] = {
-      ...mockUsers[index],
-      ...data,
+    const prev = mockUsers[index]!;
+    const updated: User = {
+      id: prev.id,
+      email: data.email ?? prev.email,
+      name: data.name ?? prev.name,
+      role: data.role ?? prev.role,
+      createdAt: prev.createdAt,
       updatedAt: new Date().toISOString(),
     };
-    return mockUsers[index];
+    mockUsers[index] = updated;
+    return updated;
   },
   delete: async (id: string): Promise<void> => {
     mockUsers = mockUsers.filter((u) => u.id !== id);

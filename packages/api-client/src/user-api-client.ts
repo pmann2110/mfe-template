@@ -15,16 +15,16 @@ export function createUserApiClient(baseUrl: string): UserApi {
 
   async function request<T>(
     path: string,
-    options?: RequestInit & { method?: string; body?: unknown },
+    options?: Omit<RequestInit, 'body'> & { method?: string; body?: unknown },
   ): Promise<T> {
     const { method = 'GET', body, ...rest } = options ?? {};
     const res = await fetch(url(path), {
+      ...rest,
       method,
       headers: {
         'Content-Type': 'application/json',
         ...rest.headers,
       },
-      ...rest,
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
     if (!res.ok) {

@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label } from '@repo/ui';
-import type { User, CreateUserRequest, UpdateUserRequest } from '@repo/api-contracts';
+import type { User, CreateUserRequest } from '@repo/api-contracts';
 
 interface UserFormDialogProps {
   open: boolean;

@@ -69,8 +69,16 @@ NODE_ENV=production
 
 #### CORS (development vs production)
 
-- **Development:** The admin-shell Next config and remote Vite configs use permissive CORS (`Access-Control-Allow-Origin: *`) for local development so the shell can load remote entry scripts from localhost. This is intended for dev only.
-- **Production:** Do not rely on `*` in production. Restrict the admin shell’s `NEXT_PUBLIC_ALLOWED_REMOTE_ORIGINS` to the exact remote origins you deploy. Remotes should serve with appropriate CORS headers (e.g. allow only the admin shell origin) when possible. See your hosting provider’s docs for setting CORS on static assets.
+- **Development:** The admin-shell Next config and remote Vite dev servers use permissive CORS (`Access-Control-Allow-Origin: *`) only when `NODE_ENV !== 'production'` so the shell can load remote entry scripts from localhost.
+- **Production:** CORS is conditional: the admin shell does not send `*` in production; it uses the first value from `NEXT_PUBLIC_ALLOWED_REMOTE_ORIGINS` in Next config, and middleware sets `Access-Control-Allow-Origin` to the request origin when it is in the allowlist (for `/config` and `/api`). Remotes (e.g. users-remote) do not set `*` in production; configure CORS for static assets at your host (e.g. Vercel) so only the admin shell origin is allowed if possible.
+
+#### Content-Security-Policy (CSP) for remote script origins
+
+The admin shell sets a Content-Security-Policy header (in [apps/admin-shell/next.config.js](../apps/admin-shell/next.config.js)) so that script and connect sources are restricted. When you add a new remote:
+
+1. **Production:** Set `NEXT_PUBLIC_ALLOWED_REMOTE_ORIGINS` to a comma-separated list of remote origins (e.g. `https://users.example.com`,`https://orders.example.com`). The CSP is built from this list: `script-src` and `connect-src` include `'self'` and those origins. Do not add wildcards; each remote origin must be explicitly listed so that loading scripts from unknown origins is blocked.
+2. **Development:** CSP allows `'unsafe-inline'` and `'unsafe-eval'` for Next.js HMR and Module Federation; this is only applied when `NODE_ENV !== 'production'`.
+3. **Adding a new remote:** After deploying a new remote, add its origin (the full base URL of where the remote is served, e.g. `https://my-remote.example.com`) to `NEXT_PUBLIC_ALLOWED_REMOTE_ORIGINS`. Redeploy the admin shell so the new CSP and CORS allowlist take effect.
 
 #### Custom Domains
 
@@ -94,7 +102,7 @@ NODE_ENV=production
    Example for admin-shell:
    ```dockerfile
    # apps/admin-shell/Dockerfile
-   FROM node:18-alpine
+   FROM node:20-alpine
    
    WORKDIR /app
    
@@ -348,64 +356,16 @@ NODE_ENV=production
 
 ## CI/CD Pipeline
 
-### GitHub Actions Workflow
+The repository uses GitHub Actions for CI/CD. The actual workflow is in [.github/workflows/ci-cd.yml](../.github/workflows/ci-cd.yml). It runs on push and pull_request to `main` and `develop`.
 
-```yaml
-name: CI/CD Pipeline
+**Pipeline summary:**
 
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
+1. **Setup:** Checkout, Node 20, pnpm 9, install, Turbo cache.
+2. **Lint**, **typecheck**, and **test** run in parallel (all workspaces that define these scripts).
+3. **Build** runs after lint, typecheck, and test pass; uploads `.next` and `dist` artifacts.
+4. **Deploy:** On push to `main` or `develop`, downloads artifacts and runs `vercel deploy --prebuilt` for admin-shell, web-shell, and users-remote (using per-app `VERCEL_*` secrets).
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
-      - run: pnpm install
-      - run: pnpm run test
-      - run: pnpm run lint
-      - run: pnpm run format:check
-
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
-      - run: pnpm install
-      - run: pnpm run build
-      - uses: actions/upload-artifact@v3
-        with:
-          name: build-artifacts
-          path: |
-            apps/admin-shell/.next
-            apps/web-shell/.next
-            apps/users-remote/dist
-
-  deploy-staging:
-    needs: build
-    if: github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: build-artifacts
-      - run: vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --confirm
-
-  deploy-production:
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: build-artifacts
-      - run: vercel --token ${{ secrets.VERCEL_TOKEN }} --prod --confirm
-```
+For local setup and required env vars, see [SETUP_GUIDE.md](SETUP_GUIDE.md).
 
 ---
 

@@ -1,4 +1,4 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@repo/ui';
+import { Table, TableBody, TableHead, TableHeader, TableRow } from '@repo/ui';
 import type { User } from '@repo/api-contracts';
 import { UserTableRow } from './UserTableRow';
 import { EmptyState } from './EmptyState';

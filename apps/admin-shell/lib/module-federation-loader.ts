@@ -15,6 +15,10 @@
  */
 
 import type { RemoteConfig } from '@repo/api-contracts';
+import {
+  startDevRuntimeHealthCheck,
+  withDevCacheBust,
+} from './module-federation-loader-dev';
 
 // Dynamic remote configurations loaded from external source
 let dynamicRemoteConfigs: Record<string, RemoteConfig> = {};
@@ -166,23 +170,6 @@ let cachedStoresNs: any | null = null;
 // workspace package.json versions to satisfy federation requiredVersion checks.
 const REPO_SHARED_VERSION = '1.0.0';
 
-// Keep a stable cache-bust token for the lifetime of this page load in development.
-// This helps avoid odd first-navigation caching / partial-module evaluation issues in dev,
-// while still allowing the browser to cache within the same page session.
-const DEV_IMPORT_NONCE =
-  typeof window !== 'undefined' ? Date.now().toString(36) : '';
-
-function withDevCacheBust(url: string, nonce?: string): string {
-  if (process.env.NODE_ENV === 'production') return url;
-  try {
-    const u = new URL(url);
-    u.searchParams.set('mf_t', nonce ?? DEV_IMPORT_NONCE);
-    return u.toString();
-  } catch {
-    return url;
-  }
-}
-
 // Initialize the federation runtime share scope
 function initFederationRuntime(): void {
   if (typeof window === 'undefined') return;
@@ -226,36 +213,10 @@ function initFederationRuntime(): void {
   w.__federation_runtime_init__ = true;
 }
 
-/** Dev-only: check federation runtime health and re-init if stale (e.g. after dev server restart). */
-function startDevRuntimeHealthCheck(): void {
-  if (process.env.NODE_ENV !== 'development' || typeof window === 'undefined') return;
-  const checkInterval = setInterval(() => {
-    const w = window as any;
-    const healthy =
-      !!w.__federation_shared__?.default &&
-      !!w.__webpack_share_scopes__?.default &&
-      !!w.__FEDERATION__?.shared;
-
-    if (!w.__federation_runtime_init__ || !healthy) {
-      console.warn('[MF] Federation runtime became unhealthy, re-initializing...');
-      try {
-        delete w.__federation_runtime_init__;
-        delete w.__webpack_share_scopes__;
-        delete w.__FEDERATION__;
-        delete w.__federation_shared__;
-      } catch {
-        // ignore
-      }
-      initFederationRuntime();
-    }
-  }, 5000);
-  window.addEventListener('beforeunload', () => clearInterval(checkInterval));
-}
-
 // Initialize federation runtime immediately when this module is imported (client-side only)
 if (typeof window !== 'undefined') {
   initFederationRuntime();
-  startDevRuntimeHealthCheck();
+  startDevRuntimeHealthCheck(initFederationRuntime);
 }
 
 export { initFederationRuntime };
@@ -365,6 +326,20 @@ function verifyFederationRuntimeReady(): boolean {
   }
   
   return basicReady;
+}
+
+/** Dev-only: clear federation globals so the next retry gets a full re-init (fixes "Please call init first" without full page reload). */
+function resetFederationRuntimeForRetry(): void {
+  if (process.env.NODE_ENV !== 'development' || typeof window === 'undefined') return;
+  const w = window as any;
+  try {
+    delete w.__federation_runtime_init__;
+    delete w.__webpack_share_scopes__;
+    delete w.__FEDERATION__;
+    delete w.__federation_shared__;
+  } catch {
+    // ignore
+  }
 }
 
 async function ensureRemoteContainerInitialized(
@@ -489,7 +464,8 @@ async function ensureRemoteContainerInitialized(
     } catch (getError) {
       const getErrMsg = getError instanceof Error ? getError.message : String(getError);
       if (getErrMsg.includes('Please call init first')) {
-        console.warn(`[MF] Detected "Please call init first" for ${remoteName}. Clearing caches for retry.`);
+        console.warn(`[MF] Detected "Please call init first" for ${remoteName}. Resetting runtime and clearing caches for retry.`);
+        resetFederationRuntimeForRetry();
         containerInitPromises.delete(container);
         remoteCache.delete(remoteName);
         loading.delete(remoteName);
@@ -688,7 +664,8 @@ async function initRemote(remoteName: string, importNonce?: string): Promise<voi
         await new Promise((r) => setTimeout(r, delay));
         
         try {
-          // Clear any cached state before retry
+          // Clear any cached state and reset runtime so retry gets a full re-init
+          resetFederationRuntimeForRetry();
           remoteCache.delete(remoteName);
           loading.delete(remoteName);
           

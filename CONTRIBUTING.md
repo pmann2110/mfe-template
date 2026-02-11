@@ -1,6 +1,6 @@
 # Contributing to MFE Module Federation
 
-Thank you for contributing. This document covers branch strategy, how to add a new remote, and how to run checks locally.
+Thank you for contributing. This document covers branch strategy, how to add a new remote, and how to run checks locally. For coding standards, testing strategy, and code review, see [docs/DEVELOPMENT_WORKFLOW.md](docs/DEVELOPMENT_WORKFLOW.md).
 
 ---
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { User, CreateUserRequest, UpdateUserRequest } from '@repo/api-contracts';
+import type { User, CreateUserRequest } from '@repo/api-contracts';
 
 interface UsersUIState {
   // Data state
@@ -23,7 +23,7 @@ interface UsersUIState {
   resetForm: () => void;
 }
 
-export const useUsersUIStore = create<UsersUIState>((set, get) => ({
+export const useUsersUIStore = create<UsersUIState>((set, _get) => ({
   // Initial state
   users: [],
   loading: true,

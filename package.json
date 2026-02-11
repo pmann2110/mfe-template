@@ -6,6 +6,7 @@
   "scripts": {
     "build": "turbo build",
     "checks": "turbo run build lint typecheck",
+    "clean": "rm -rf .turbo",
     "dev": "turbo dev",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,jsonc}\"",
     "lint": "turbo lint",

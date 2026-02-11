@@ -6,8 +6,11 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite --port 6517 --strictPort",
+    "lint": "eslint . --max-warnings 0",
     "local": "STANDALONE_MODE=true vite --port 6517 --strictPort",
-    "start": "vite preview --port 6517"
+    "start": "vite preview --port 6517",
+    "test": "pnpm exec vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@repo/api-client": "workspace:*",
@@ -34,6 +37,7 @@
     "tailwindcss": "^4",
     "ts-config": "workspace:*",
     "typescript": "^5",
-    "vite": "^6"
+    "vite": "^6",
+    "vitest": "^2.1.0"
   }
 }

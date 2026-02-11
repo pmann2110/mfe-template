@@ -58,16 +58,24 @@ export default defineConfig(({ command, mode }) => {
     );
   }
   
+  // CORS: permissive only in development so the shell can load remoteEntry from localhost.
+  // In production, serve assets with CORS configured at the host (e.g. Vercel); do not use *.
+  const isProduction = mode === 'production';
+  const corsHeaders =
+    !isProduction
+      ? {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      : undefined;
+
   return {
   base,
   plugins,
   server: {
     cors: true,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
+    ...(corsHeaders ? { headers: corsHeaders } : {}),
   },
   build: {
     target: 'chrome89',

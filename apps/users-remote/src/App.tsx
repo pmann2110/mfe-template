@@ -6,7 +6,7 @@ import {
   Routes,
   Route,
 } from 'react-router-dom';
-import type { User, CreateUserRequest, UpdateUserRequest } from '@repo/api-contracts';
+import type { User, UpdateUserRequest } from '@repo/api-contracts';
 import { userApi } from './data/user-api';
 import type { Session as CoreSession } from '@repo/auth-core';
 import { getShellStore } from '@repo/stores';
@@ -25,7 +25,7 @@ interface UsersAppProps {
 
 export default function UsersApp({ session: propSession, routingProps }: UsersAppProps) {
   // Detect standalone mode: when routingProps is undefined, we're running standalone
-  const isStandalone = routingProps === undefined;
+  const _isStandalone = routingProps === undefined;
   
   // Try to get standalone session (will be null if not in provider)
   const standaloneSession = useStandaloneAuth();

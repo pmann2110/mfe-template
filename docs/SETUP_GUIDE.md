@@ -228,11 +228,11 @@ See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for production env vars and deplo
    - Check the session management in `shell-store.ts`
 
 3. **TypeScript Errors**:
-   - Run `pnpm run type-check` to identify type errors
+   - Run `pnpm run typecheck` to identify type errors
    - Ensure all dependencies are properly typed
 
 4. **Build Failures**:
-   - Clear the Turborepo cache: `pnpm run clean`
+   - Clear the Turbo cache: `pnpm run clean` (removes `.turbo`).
    - Reinstall dependencies: `pnpm install`
 
 ---
