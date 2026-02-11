@@ -1,4 +1,9 @@
 import type { Session, Permission } from '@repo/auth-core';
+import {
+  type SystemPermission,
+  SYSTEM_PERMISSIONS,
+  getSystemPermissionsFromRoles,
+} from './permission-matrix';
 
 /**
  * Check permission using session (roles + permissions).
@@ -36,6 +41,41 @@ export function canWithPermissions(
   return permissions.includes(permission);
 }
 
+/**
+ * Resolve effective system permissions for a session (from roles matrix + permissions array).
+ */
+function getEffectiveSystemPermissions(session: Session | null): SystemPermission[] {
+  if (!session) return [];
+  const fromRoles = getSystemPermissionsFromRoles(session.user.roles ?? []);
+  const fromPerms = (session.user.permissions ?? []).filter((p) =>
+    (SYSTEM_PERMISSIONS as readonly string[]).includes(p),
+  ) as unknown as SystemPermission[];
+  const set = new Set<SystemPermission>([...fromRoles, ...fromPerms]);
+  return [...set];
+}
+
+/**
+ * Check system-level permission using session (platform scope, no org context).
+ */
+export function canSystem(
+  permission: SystemPermission,
+  session: Session | null,
+): boolean {
+  const perms = getEffectiveSystemPermissions(session);
+  return perms.includes(permission);
+}
+
+/**
+ * Check system permission using a resolved system permissions array.
+ */
+export function canWithSystemPermissions(
+  permission: SystemPermission,
+  systemPermissions: string[] | null | undefined,
+): boolean {
+  if (!systemPermissions || systemPermissions.length === 0) return false;
+  return systemPermissions.includes(permission);
+}
+
 export function hasAnyPermission(
   permissions: Permission[],
   session: Session | null,
@@ -48,4 +88,16 @@ export function hasAllPermissions(
   session: Session | null,
 ): boolean {
   return permissions.every((p) => can(p, session));
+}
+
+/**
+ * Check org-level permission using the current org permissions (from tenant context).
+ * Use when the user has selected an org and currentOrgPermissions are in the store.
+ */
+export function canInOrg(
+  permission: string,
+  orgPermissions: string[] | null | undefined,
+): boolean {
+  if (!orgPermissions || orgPermissions.length === 0) return false;
+  return orgPermissions.includes(permission);
 }

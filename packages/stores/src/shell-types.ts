@@ -9,12 +9,25 @@ export interface Notification {
   read?: boolean;
 }
 
+/** Minimal tenant/org metadata for shell context (avoids coupling to api-contracts). */
+export interface TenantMetadata {
+  id: string;
+  name: string;
+  slug?: string;
+}
+
+/** Same shape as TenantMetadata; used for listing user's accessible orgs. */
+export type AvailableTenant = TenantMetadata;
+
 export interface ShellAppState {
   auth: {
     session: Session | null;
   };
   tenant: {
     tenantId: string | null;
+    currentOrgPermissions: string[] | null;
+    tenantMetadata: TenantMetadata | null;
+    availableTenants: AvailableTenant[];
   };
   ui: {
     notifications: Notification[];
@@ -28,6 +41,9 @@ export interface ShellAppActions {
 
   // Tenant actions
   setTenantId: (tenantId: string | null) => void;
+  setCurrentOrgPermissions: (permissions: string[] | null) => void;
+  setTenantMetadata: (metadata: TenantMetadata | null) => void;
+  setAvailableTenants: (tenants: AvailableTenant[]) => void;
 
   // UI actions
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => void;

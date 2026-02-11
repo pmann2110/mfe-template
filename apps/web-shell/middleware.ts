@@ -12,15 +12,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Protect /account routes
+    // Protect /account routes (tenant context is validated in layout when needed)
     if (path.startsWith('/account') && !session) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
+    // Tenant-scoped routes (/account/org/*): auth enforced above; tenantId and
+    // currentOrgPermissions are enforced in layout (OrgLayoutClient).
     return NextResponse.next();
   } catch (error) {
     console.error('Middleware error:', error);
-    // If middleware fails, redirect to login
     return NextResponse.redirect(new URL('/login', request.url));
   }
 }

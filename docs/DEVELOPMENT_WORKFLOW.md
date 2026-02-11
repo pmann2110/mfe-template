@@ -35,6 +35,7 @@ This document covers **coding standards**, **testing strategy**, **code review**
 
 - Use the global shell store (`@repo/stores`) for shared state; avoid duplication.
 - See [STATE_AND_AUTH.md](STATE_AND_AUTH.md) for when to use stores vs auth-core.
+- For tenant context and org permissions, see [MULTI_TENANCY.md](MULTI_TENANCY.md) and [PERMISSIONS_GUIDE.md](PERMISSIONS_GUIDE.md).
 
 ---
 

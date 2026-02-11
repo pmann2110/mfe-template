@@ -148,7 +148,7 @@ jobs:
           path: |
             apps/admin-shell/.next
             apps/web-shell/.next
-            apps/users-remote/dist
+            apps/identity-remote/dist
 
   deploy:
     name: Deploy
@@ -188,9 +188,9 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEB_SHELL_PROJECT_ID }}
 
-      - name: Deploy Users Remote
+      - name: Deploy Identity Remote
         run: |
-          cd apps/users-remote
+          cd apps/identity-remote
           vercel pull --yes --environment=$DEPLOY_ENV --token=${{ secrets.VERCEL_TOKEN }}
           vercel deploy --prebuilt $DEPLOY_PROD --token=${{ secrets.VERCEL_TOKEN }}
         env:

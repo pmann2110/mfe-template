@@ -5,7 +5,7 @@ This document describes how to add a new application to the monorepo. The repo s
 ## App taxonomy
 
 - **Shell**: A Next.js app that hosts remotes (e.g. `admin-shell`). Uses the module-federation loader and `remote-configs.json`. Other Next.js apps that do not load remotes are not shells.
-- **Remote**: A federated app (e.g. Vite-based `users-remote`) that is exposed via Module Federation and loaded at runtime by a shell.
+- **Remote**: A federated app (e.g. Vite-based `identity-remote`) that is exposed via Module Federation and loaded at runtime by a shell.
 - **Standalone (normal web app)**: A Next.js or Vite app with no Module Federation. Uses shared packages for auth, UI, and state. **Use `web-shell` as the reference** for new standalone apps; there is no separate template app.
 
 ## Adding a new standalone (normal) web app
@@ -17,7 +17,7 @@ This document describes how to add a new application to the monorepo. The repo s
 
 ## Adding a new MFE remote
 
-1. Use `users-remote` as the reference: Vite + `@module-federation/vite`, expose a single default export (React component) that accepts [RemoteAppProps](packages/api-contracts/src/routing.ts) (`session`, `routingProps?`).
+1. Use `identity-remote` as the reference: Vite + `@module-federation/vite`, expose a single default export (React component) that accepts [RemoteAppProps](packages/api-contracts/src/routing.ts) (`session`, `routingProps?`).
 2. Implement the **remote contract**: one default export (e.g. from `./src/App.tsx`) receiving `session` and optional `routingProps`. When `routingProps` is undefined, the remote is in standalone mode (e.g. dev).
 3. Shared dependencies: `react`, `react-dom`, `@repo/ui`, `@repo/stores`, `@repo/auth-core`, `@repo/api-contracts`, `@repo/remote-utils` (RouterSync, StandaloneAuth).
 4. Add the remote to the shell’s [remote-configs.json](apps/admin-shell/public/config/remote-configs.json) (development, staging, production) and add a route + `ModuleFederationRemote` usage in the shell.

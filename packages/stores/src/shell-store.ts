@@ -17,7 +17,12 @@ function generateNotificationId(): string {
 /** Initial state for SSR/getServerSnapshot so hydration matches (server never mutates store). */
 export const INITIAL_SHELL_APP_STATE: ShellAppState = {
   auth: { session: null },
-  tenant: { tenantId: null },
+  tenant: {
+    tenantId: null,
+    currentOrgPermissions: null,
+    tenantMetadata: null,
+    availableTenants: [],
+  },
   ui: { notifications: [] },
   remotes: {},
 };
@@ -31,6 +36,9 @@ function createShellStore(initialState?: Partial<ShellAppState>): StoreApi<Shell
     },
     tenant: {
       tenantId: null,
+      currentOrgPermissions: null,
+      tenantMetadata: null,
+      availableTenants: [],
       ...initialState?.tenant,
     },
     ui: {
@@ -56,6 +64,33 @@ function createShellStore(initialState?: Partial<ShellAppState>): StoreApi<Shell
         tenant: {
           ...state.tenant,
           tenantId,
+        },
+      }));
+    },
+
+    setCurrentOrgPermissions: (permissions) => {
+      set((state) => ({
+        tenant: {
+          ...state.tenant,
+          currentOrgPermissions: permissions,
+        },
+      }));
+    },
+
+    setTenantMetadata: (metadata) => {
+      set((state) => ({
+        tenant: {
+          ...state.tenant,
+          tenantMetadata: metadata,
+        },
+      }));
+    },
+
+    setAvailableTenants: (tenants) => {
+      set((state) => ({
+        tenant: {
+          ...state.tenant,
+          availableTenants: tenants,
         },
       }));
     },

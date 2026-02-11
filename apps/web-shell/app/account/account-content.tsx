@@ -1,6 +1,8 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui';
+import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from '@repo/ui';
+import { Building2 } from 'lucide-react';
 import type { Session } from 'next-auth';
 
 interface AccountContentProps {
@@ -10,9 +12,18 @@ interface AccountContentProps {
 export function AccountContent({ session }: AccountContentProps) {
   return (
     <div className="container py-20">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Account</h1>
+        <Button variant="outline" asChild>
+          <Link href="/account/org" className="gap-2">
+            <Building2 className="h-4 w-4" />
+            Manage organization
+          </Link>
+        </Button>
+      </div>
       <Card>
         <CardHeader>
-          <CardTitle>Account</CardTitle>
+          <CardTitle>Your account</CardTitle>
           <CardDescription>Your account information</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

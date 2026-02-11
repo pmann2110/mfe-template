@@ -19,15 +19,22 @@ export const ADMIN_ROUTES = [
     remoteName: null as string | null,
   },
   {
-    path: '/admin/users',
+    path: '/admin/accounts',
     permission: 'user:read' as Permission,
-    label: 'Users',
-    icon: 'users' as const,
-    remoteName: 'users' as string | null,
+    label: 'Accounts',
+    icon: 'accounts' as const,
+    remoteName: 'identity' as string | null,
+    children: [
+      { path: '/admin/accounts/orgs', label: 'Organizations' },
+      { path: '/admin/accounts/users', label: 'Users' },
+      { path: '/admin/accounts/roles', label: 'Roles & Permissions' },
+    ] as const,
   },
 ] as const;
 
 export type AdminRouteIcon = (typeof ADMIN_ROUTES)[number]['icon'];
+
+export type AdminRoute = (typeof ADMIN_ROUTES)[number];
 
 /**
  * Whether the user can access a route given their permissions.

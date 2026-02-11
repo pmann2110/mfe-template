@@ -12,7 +12,7 @@ The project is organized into two main directories:
 1. **`apps/`**: Contains the main applications:
    - `admin-shell`: Next.js 15 application serving as the admin dashboard shell (Port: 3001).
    - `web-shell`: Next.js 15 application serving as the public web shell (Port: 3000).
-   - `users-remote`: Vite 6-based remote application for managing users (Port: 6517).
+   - `identity-remote`: Vite 6-based remote for identity & access management—users, orgs, roles (Port: 6517).
 
 2. **`packages/`**: Contains shared libraries and utilities:
    - `api-contracts`: Defines API interfaces, routing types, and data models.
@@ -28,7 +28,7 @@ The project is organized into two main directories:
 ### Key Components
 
 #### 1. **Module Federation Setup**
-- **`apps/users-remote/vite.config.ts`**: Configures Module Federation for the users remote application. Exposes `App.tsx` component and shares React 19, ReactDOM, `@repo/ui`, and `@repo/stores` as singletons. Supports standalone mode via `STANDALONE_MODE=true`.
+- **`apps/identity-remote/vite.config.ts`**: Configures Module Federation for the identity remote (scope `identity`). Exposes `App.tsx` and shares React 19, ReactDOM, `@repo/ui`, and `@repo/stores` as singletons. Supports standalone mode via `STANDALONE_MODE=true`.
 - **`apps/admin-shell/lib/module-federation-loader.ts`**: Implements a runtime loader for dynamically loading remote modules at runtime (Turbopack compatible). Handles initialization, caching, error recovery with exponential backoff, and dev HMR health checks.
 - **`apps/admin-shell/components/remotes/ModuleFederationRemote.tsx`**: A React component that loads and renders remote modules dynamically.
 - **`apps/admin-shell/public/config/remote-configs.json`**: Environment-specific remote configuration (development, staging, production).

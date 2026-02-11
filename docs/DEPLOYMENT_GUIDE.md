@@ -47,7 +47,7 @@ This guide provides instructions for deploying the Microfrontends Module Federat
 
    **Users Remote**:
    ```bash
-   cd apps/users-remote
+   cd apps/identity-remote
    vercel --prod
    ```
 
@@ -61,7 +61,7 @@ NEXTAUTH_SECRET=your-secret-key
 NODE_ENV=production
 ```
 
-**Optional (for future use):** `API_BASE_URL` is not used by the current codebase. When you add a real backend for remotes (e.g. users-remote), set `API_BASE_URL` and wire it into your API client; until then, remotes use mock data.
+**Optional (for future use):** `API_BASE_URL` is not used by the current codebase. When you add a real backend for remotes (e.g. identity-remote), set `API_BASE_URL` and wire it into your API client; until then, remotes use mock data.
 
 **Production requirements:** In production, `NEXTAUTH_SECRET` and `NEXTAUTH_URL` are required; the app will throw at startup if either is missing. Do not rely on fallbacks in production.
 
@@ -70,7 +70,7 @@ NODE_ENV=production
 #### CORS (development vs production)
 
 - **Development:** The admin-shell Next config and remote Vite dev servers use permissive CORS (`Access-Control-Allow-Origin: *`) only when `NODE_ENV !== 'production'` so the shell can load remote entry scripts from localhost.
-- **Production:** CORS is conditional: the admin shell does not send `*` in production; it uses the first value from `NEXT_PUBLIC_ALLOWED_REMOTE_ORIGINS` in Next config, and middleware sets `Access-Control-Allow-Origin` to the request origin when it is in the allowlist (for `/config` and `/api`). Remotes (e.g. users-remote) do not set `*` in production; configure CORS for static assets at your host (e.g. Vercel) so only the admin shell origin is allowed if possible.
+- **Production:** CORS is conditional: the admin shell does not send `*` in production; it uses the first value from `NEXT_PUBLIC_ALLOWED_REMOTE_ORIGINS` in Next config, and middleware sets `Access-Control-Allow-Origin` to the request origin when it is in the allowlist (for `/config` and `/api`). Remotes (e.g. identity-remote) do not set `*` in production; configure CORS for static assets at your host (e.g. Vercel) so only the admin shell origin is allowed if possible.
 
 #### Content-Security-Policy (CSP) for remote script origins
 
@@ -146,8 +146,8 @@ The admin shell sets a Content-Security-Policy header (in [apps/admin-shell/next
          - NODE_ENV=production
        restart: unless-stopped
      
-     users-remote:
-       build: ./apps/users-remote
+     identity-remote:
+       build: ./apps/identity-remote
        ports:
          - "6517:6517"
        environment:
@@ -234,7 +234,7 @@ The admin shell sets a Content-Security-Policy header (in [apps/admin-shell/next
    ```bash
    kubectl apply -f apps/admin-shell/k8s/
    kubectl apply -f apps/web-shell/k8s/
-   kubectl apply -f apps/users-remote/k8s/
+   kubectl apply -f apps/identity-remote/k8s/
    ```
 
 ---
@@ -363,7 +363,7 @@ The repository uses GitHub Actions for CI/CD. The actual workflow is in [.github
 1. **Setup:** Checkout, Node 20, pnpm 9, install, Turbo cache.
 2. **Lint**, **typecheck**, and **test** run in parallel (all workspaces that define these scripts).
 3. **Build** runs after lint, typecheck, and test pass; uploads `.next` and `dist` artifacts.
-4. **Deploy:** On push to `main` or `develop`, downloads artifacts and runs `vercel deploy --prebuilt` for admin-shell, web-shell, and users-remote (using per-app `VERCEL_*` secrets).
+4. **Deploy:** On push to `main` or `develop`, downloads artifacts and runs `vercel deploy --prebuilt` for admin-shell, web-shell, and identity-remote (using per-app `VERCEL_*` secrets).
 
 For local setup and required env vars, see [SETUP_GUIDE.md](SETUP_GUIDE.md).
 

@@ -1,1 +1,1 @@
-export { createUserApiClient } from './user-api-client';
+export { createUserApiClient, type UserApiClientOptions } from './user-api-client';

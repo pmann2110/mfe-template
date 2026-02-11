@@ -35,8 +35,25 @@ async function validateCredentials(
   }
 
   await Promise.resolve();
+  
+  // Map email to fixed user IDs to match mock-identity.ts
+  // admin@example.com -> '1' (system org member, can access admin-shell)
+  let userId: string;
+  if (email === 'admin@example.com') {
+    userId = '1';
+  } else if (email === 'john@example.com') {
+    userId = '2';
+  } else if (email === 'jane@example.com') {
+    userId = '3';
+  } else if (email === 'bob@example.com') {
+    userId = '4';
+  } else {
+    // Fallback for other emails
+    userId = `user-${String(Date.now())}`;
+  }
+  
   return {
-    id: `user-${String(Date.now())}`,
+    id: userId,
     email,
     name: email.split('@')[0] ?? 'Unknown User',
     roles: [...roles],

@@ -18,11 +18,11 @@ The project is a pnpm workspace monorepo. Shared packages live under `packages/`
 | Package | Purpose | Used by |
 |--------|---------|---------|
 | `@repo/api-contracts` | API interfaces, routing types, data models (e.g. `User`, `UserApi`, `RemoteConfig`, `ApiResult`) | Shells, remotes, api-client |
-| `@repo/api-client` | Shared API client implementation (e.g. `createUserApiClient`) using fetch and `API_BASE_URL` | Remotes (e.g. users-remote when not using mock) |
+| `@repo/api-client` | Shared API client implementation (e.g. `createUserApiClient`) using fetch and `API_BASE_URL` | Remotes (e.g. identity-remote when not using mock) |
 | `@repo/auth-core` | Core auth types, session, auth client, optional `createShellStore` for non–Next.js shells | Shells, remotes, auth-next, rbac |
 | `@repo/auth-next` | NextAuth.js v5 config (authOptions, callbacks) for Next.js shells | admin-shell, web-shell |
 | `@repo/rbac` | Role-based access control (permissions, `canWithPermissions`) | Shells, remotes |
-| `@repo/remote-utils` | RouterSync, StandaloneAuthProvider for remotes | Remotes (e.g. users-remote) |
+| `@repo/remote-utils` | RouterSync, StandaloneAuthProvider for remotes | Remotes (e.g. identity-remote) |
 | `@repo/stores` | Global shell store (Zustand singleton): session snapshot, notifications, remote loading state | Shells, remotes |
 | `@repo/ui` | Shared UI components and `globals.css` design tokens (Tailwind v4, Radix) | All apps |
 | `@repo/tailwind-config` | Shared Tailwind base config (theme, dark mode, plugins) | All apps |

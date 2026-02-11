@@ -20,7 +20,7 @@ export interface UpdateUserRequest {
 }
 
 export interface UserApi {
-  list: () => Promise<User[]>;
+  list: (organizationId?: string) => Promise<User[]>;
   get: (id: string) => Promise<User>;
   create: (data: CreateUserRequest) => Promise<User>;
   update: (id: string, data: UpdateUserRequest) => Promise<User>;

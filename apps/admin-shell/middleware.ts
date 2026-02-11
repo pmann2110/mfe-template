@@ -1,12 +1,13 @@
 /**
  * Single source of truth for admin route protection. Permission checks for
  * /admin/* are enforced here when session is available.
+ * Admin-shell is platform-only; tenant context is not required for these routes.
  *
  * IMPORTANT: In NextAuth v5, auth() and the auth() wrapper can return null / run
  * authorized() with null in Edge middleware even when the user has a valid JWT.
  * So we do NOT redirect to /login from middleware when session is null—we let
  * the admin layout (server component, Node.js) do that. That way navigation to
- * /admin/users works; the layout's auth() sees the session and renders.
+ * /admin/accounts works; the layout's auth() sees the session and renders.
  * When we do have a session here, we enforce permission and redirect to
  * /admin/unauthorized when needed.
  *

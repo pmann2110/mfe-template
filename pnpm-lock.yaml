@@ -124,7 +124,7 @@ importers:
         specifier: ^5
         version: 5.7.3
 
-  apps/users-remote:
+  apps/identity-remote:
     dependencies:
       '@repo/api-client':
         specifier: workspace:*
@@ -135,6 +135,9 @@ importers:
       '@repo/auth-core':
         specifier: workspace:*
         version: link:../../packages/auth-core
+      '@repo/rbac':
+        specifier: workspace:*
+        version: link:../../packages/rbac
       '@repo/remote-utils':
         specifier: workspace:*
         version: link:../../packages/remote-utils
@@ -147,6 +150,9 @@ importers:
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      lucide-react:
+        specifier: ^0.468.0
+        version: 0.468.0(react@19.1.0)
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -202,12 +208,21 @@ importers:
 
   apps/web-shell:
     dependencies:
+      '@repo/api-contracts':
+        specifier: workspace:*
+        version: link:../../packages/api-contracts
+      '@repo/auth-core':
+        specifier: workspace:*
+        version: link:../../packages/auth-core
       '@repo/auth-next':
         specifier: workspace:*
         version: link:../../packages/auth-next
       '@repo/rbac':
         specifier: workspace:*
         version: link:../../packages/rbac
+      '@repo/stores':
+        specifier: workspace:*
+        version: link:../../packages/stores
       '@repo/tailwind-config':
         specifier: workspace:*
         version: link:../../packages/tailwind-config
@@ -386,6 +401,9 @@ importers:
       '@repo/auth-core':
         specifier: workspace:*
         version: link:../auth-core
+      react:
+        specifier: ^19.1.0
+        version: 19.1.0
     devDependencies:
       '@types/node':
         specifier: ^20

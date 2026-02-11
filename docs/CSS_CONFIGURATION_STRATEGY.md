@@ -17,7 +17,7 @@ This document outlines the CSS configuration strategy used across all apps. The 
 - Each app has a small config that **extends the base** and only sets **content** paths:
   - [apps/admin-shell/tailwind.config.mjs](apps/admin-shell/tailwind.config.mjs)
   - [apps/web-shell/tailwind.config.js](apps/web-shell/tailwind.config.js)
-  - [apps/users-remote/tailwind.config.js](apps/users-remote/tailwind.config.js)
+  - [apps/identity-remote/tailwind.config.js](apps/identity-remote/tailwind.config.js)
 - Apps spread `...baseConfig` and add their own `content` arrays (app source + `../../packages/ui/src/**/*.{ts,tsx}`).
 
 ### 3. Design tokens: `packages/ui/src/globals.css`

@@ -36,6 +36,9 @@ export function useShellActions(): Pick<
   ShellStore,
   | 'setSession'
   | 'setTenantId'
+  | 'setCurrentOrgPermissions'
+  | 'setTenantMetadata'
+  | 'setAvailableTenants'
   | 'addNotification'
   | 'clearNotifications'
   | 'markNotificationRead'
@@ -50,6 +53,9 @@ export function useShellActions(): Pick<
   return {
     setSession: state.setSession,
     setTenantId: state.setTenantId,
+    setCurrentOrgPermissions: state.setCurrentOrgPermissions,
+    setTenantMetadata: state.setTenantMetadata,
+    setAvailableTenants: state.setAvailableTenants,
     addNotification: state.addNotification,
     clearNotifications: state.clearNotifications,
     markNotificationRead: state.markNotificationRead,

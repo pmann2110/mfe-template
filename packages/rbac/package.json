@@ -12,7 +12,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@repo/auth-core": "workspace:*"
+    "@repo/auth-core": "workspace:*",
+    "react": "^19.1.0"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -41,6 +41,12 @@ export function WebLayoutClient({
                 >
                   Account
                 </Link>
+                <Link
+                  href="/account/org"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground"
+                >
+                  My organization
+                </Link>
                 <span className="text-sm text-muted-foreground">
                   {session.user.email}
                 </span>

@@ -43,8 +43,8 @@ Minimum required variables:
 
 Notes:
 - The current auth implementation is **mock credentials** (see `packages/auth-next/src/auth-options.ts`). If you add a real backend, you can introduce an `API_BASE_URL` (or similar) and wire it into `validateCredentials()`.
-- `users-remote` can run in **federated mode** (default) or **standalone mode** using `STANDALONE_MODE=true`.
-- **users-remote API source:** Set `VITE_USE_MOCK_API=false` and `VITE_API_BASE_URL=<base URL>` to use the shared API client (real backend). Default is mock (`VITE_USE_MOCK_API=true` or unset).
+- `identity-remote` can run in **federated mode** (default) or **standalone mode** using `STANDALONE_MODE=true`.
+- **identity-remote API source:** Set `VITE_USE_MOCK_API=false` and `VITE_API_BASE_URL=<base URL>` to use the shared API client (real backend). Default is mock (`VITE_USE_MOCK_API=true` or unset).
 
 ---
 
@@ -76,10 +76,10 @@ pnpm --filter admin-shell dev
 pnpm --filter web-shell dev
 
 # Users Remote
-pnpm --filter users-remote dev
+pnpm --filter identity-remote dev
 
 # Users Remote (standalone mode - federation disabled)
-pnpm --filter users-remote local
+pnpm --filter identity-remote local
 ```
 
 ### Building for Production
@@ -110,7 +110,7 @@ Use the standard checks instead:
 ├── apps/
 │   ├── admin-shell/          # Next.js admin dashboard shell
 │   ├── web-shell/             # Next.js web shell
-│   └── users-remote/          # Vite-based users remote application
+│   └── identity-remote/       # Vite-based identity & access management remote
 ├── packages/
 │   ├── api-contracts/         # API interfaces and data models
 │   ├── auth-core/             # Core authentication logic
@@ -175,7 +175,7 @@ Use the standard checks instead:
    # Deploy web-shell
    vercel --prod --scope your-team-name
    
-   # Deploy users-remote
+   # Deploy identity-remote
    vercel --prod --scope your-team-name
    ```
 
