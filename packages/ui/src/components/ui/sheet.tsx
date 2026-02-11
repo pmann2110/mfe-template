@@ -56,8 +56,12 @@ const sheetVariants: Record<
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { side?: SheetSide }
->(({ side = 'right', className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+    side?: SheetSide;
+    /** Accessible title for screen readers (visually hidden). Defaults to "Menu". */
+    accessibilityTitle?: string;
+  }
+>(({ side = 'right', className, children, accessibilityTitle = 'Menu', ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <DialogPrimitive.Content
@@ -69,6 +73,7 @@ const SheetContent = React.forwardRef<
       )}
       {...props}
     >
+      <DialogPrimitive.Title className="sr-only">{accessibilityTitle}</DialogPrimitive.Title>
       {children}
       <DialogPrimitive.Close
         className={cn(
