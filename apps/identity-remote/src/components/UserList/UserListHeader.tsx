@@ -1,4 +1,5 @@
 import { Button, Input } from '@repo/ui';
+import { UserPlus } from 'lucide-react';
 
 interface UserListHeaderProps {
   canWrite: boolean;
@@ -21,21 +22,16 @@ export function UserListHeader({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground via-foreground/80 to-foreground/60 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold tracking-tight">
             Users
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground">
             Manage user accounts and permissions
           </p>
         </div>
         {canWrite && (
-          <Button
-            onClick={onCreate}
-            className="gap-2 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
+          <Button onClick={onCreate} className="gap-2">
+            <UserPlus className="h-4 w-4" />
             Add User
           </Button>
         )}

@@ -11,6 +11,7 @@ import {
 } from '@repo/ui';
 import type { User } from '@repo/api-contracts';
 import { getRoleInOrg } from '../../data/mock-identity';
+import { getRoleBadgeClassName } from '../../lib/role-badge';
 import { EmptyState } from './EmptyState';
 
 interface UserTableProps {
@@ -32,15 +33,6 @@ function initials(name: string): string {
     .join('')
     .toUpperCase()
     .slice(0, 2);
-}
-
-function roleBadgeClass(roleName: string): string {
-  const r = roleName.toLowerCase();
-  if (r === 'admin' || r.includes('admin'))
-    return 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:border-purple-800';
-  if (r === 'member' || r === 'manager' || r.includes('member'))
-    return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-800';
-  return 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
 }
 
 export function UserTable({
@@ -147,8 +139,9 @@ export function UserTable({
         sortable: true,
         accessor: (row) => {
           const display = getRoleDisplay(row);
+          const roleClassName = getRoleBadgeClassName(display);
           return (
-            <Badge variant="secondary" className={roleBadgeClass(display)}>
+            <Badge variant="secondary" className={roleClassName}>
               {display}
             </Badge>
           );

@@ -69,18 +69,20 @@ export function DashboardContent({ session }: DashboardContentProps) {
           return (
             <Card
               key={stat.title}
-              className={`transition-shadow hover:shadow-md ${animationClass('fadeIn', 'normal')}`}
+              className={`group transition-all hover:shadow-lg hover:-translate-y-0.5 ${animationClass('fadeIn', 'normal')}`}
               style={{ animationDelay: `${i * 50}ms` }}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {stat.title}
                 </CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
+                <div className="rounded-lg bg-primary/10 p-2 group-hover:bg-primary/20 transition-colors">
+                  <Icon className="h-4 w-4 text-primary" />
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="text-2xl font-bold tracking-tight">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">
                   {stat.description}
                 </p>
               </CardContent>

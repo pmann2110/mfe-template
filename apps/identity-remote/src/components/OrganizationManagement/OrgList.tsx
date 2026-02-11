@@ -56,8 +56,8 @@ export function OrgList() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Organizations</h1>
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
           <p className="text-muted-foreground">Switch or manage your organizations</p>
         </div>
         <div className="flex gap-2">
@@ -97,19 +97,27 @@ export function OrgList() {
                   key={org.id}
                   type="button"
                   onClick={() => handleSwitch(org)}
-                  className={`flex items-center gap-3 rounded-lg border p-4 text-left transition-colors hover:bg-accent/50 ${
-                    isCurrent ? 'border-primary bg-primary/5' : 'border-border'
+                  className={`group flex items-center gap-4 rounded-lg border p-4 text-left transition-all hover:shadow-md hover:border-primary/50 ${
+                    isCurrent
+                      ? 'border-primary/50 bg-primary/5 shadow-sm ring-1 ring-primary/20'
+                      : 'border-border/60 hover:bg-accent/30'
                   }`}
                 >
-                  <Building2 className="h-8 w-8 shrink-0 text-muted-foreground" />
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                    isCurrent ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary'
+                  }`}>
+                    <Building2 className="h-6 w-6" />
+                  </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium truncate">{org.name}</p>
+                    <p className="font-semibold truncate">{org.name}</p>
                     {org.slug && (
-                      <p className="text-xs text-muted-foreground">{org.slug}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{org.slug}</p>
                     )}
                   </div>
                   {isCurrent && (
-                    <span className="text-xs font-medium text-primary">Current</span>
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                      Current
+                    </span>
                   )}
                 </button>
               );
@@ -123,17 +131,6 @@ export function OrgList() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create organization</CardTitle>
-          <CardDescription>Create a new organization (mock: not persisted)</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button variant="outline" disabled>
-            Create organization (coming soon)
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }

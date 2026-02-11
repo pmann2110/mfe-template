@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui';
+import { Users } from 'lucide-react';
 import type { User } from '@repo/api-contracts';
 import { UserListHeader } from './UserListHeader';
 import { UserTable } from './UserTable';
@@ -53,17 +54,15 @@ export function UserList({
         onBulkDelete={selectedIds.length > 0 ? handleBulkDelete : undefined}
       />
 
-      <Card className="shadow-xl border-0 bg-gradient-to-br from-card via-card to-card/50 backdrop-blur overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-b">
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <svg className="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Users className="h-6 w-6 text-primary" />
                 User Directory
               </CardTitle>
-              <CardDescription className="text-base mt-1">
+              <CardDescription className="mt-1 text-base">
                 {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''} registered
               </CardDescription>
             </div>

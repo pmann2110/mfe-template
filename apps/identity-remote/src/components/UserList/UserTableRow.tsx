@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Button, TableCell, TableRow, Badge } from '@repo/ui';
+import { Pencil, Trash2 } from 'lucide-react';
 import type { User } from '@repo/api-contracts';
+import { getRoleBadgeClassName } from '../../lib/role-badge';
 
 interface UserTableRowProps {
   user: User;
@@ -29,46 +31,30 @@ export function UserTableRow({ user, index, canWrite, onEdit, onDelete }: UserTa
       </TableCell>
       <TableCell className="text-muted-foreground">{user.email}</TableCell>
       <TableCell>
-        <Badge
-          variant="default"
-          className={`capitalize shadow-sm font-medium ${
-            user.role === 'admin' 
-              ? 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:border-purple-800' 
-              : user.role === 'manager'
-              ? 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-800'
-              : 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
-          }`}
-        >
-          <span className={`inline-block h-1.5 w-1.5 rounded-full mr-1.5 ${
-            user.role === 'admin' ? 'bg-purple-500' : user.role === 'manager' ? 'bg-blue-500' : 'bg-gray-400'
-          }`} />
-          {user.role}
+        <Badge variant="secondary" className={getRoleBadgeClassName(user.role ?? '')}>
+          {user.role ?? '—'}
         </Badge>
       </TableCell>
       <TableCell>
-        <div className="flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="flex justify-end gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           {canWrite && (
             <>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onEdit(user)}
-                className="hover:bg-primary/10 hover:text-primary transition-colors"
+                className="gap-1 hover:bg-primary/10 hover:text-primary"
               >
-                <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
+                <Pencil className="h-3.5 w-3.5" />
                 Edit
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onDelete(user.id)}
-                className="hover:bg-destructive/10 hover:text-destructive transition-colors"
+                className="gap-1 hover:bg-destructive/10 hover:text-destructive"
               >
-                <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
+                <Trash2 className="h-3.5 w-3.5" />
                 Delete
               </Button>
             </>

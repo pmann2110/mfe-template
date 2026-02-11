@@ -11,9 +11,12 @@ interface AccountContentProps {
 
 export function AccountContent({ session }: AccountContentProps) {
   return (
-    <div className="container py-20">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Account</h1>
+    <div className="container py-12 md:py-16">
+      <div className="mb-8 flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Account</h1>
+          <p className="text-muted-foreground">Manage your account settings</p>
+        </div>
         <Button variant="outline" asChild>
           <Link href="/account/org" className="gap-2">
             <Building2 className="h-4 w-4" />
@@ -42,7 +45,7 @@ export function AccountContent({ session }: AccountContentProps) {
                 {session.user.permissions.map((permission) => (
                   <span
                     key={permission}
-                    className="rounded-md bg-primary/10 px-2 py-1 text-xs text-primary"
+                    className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
                   >
                     {permission}
                   </span>

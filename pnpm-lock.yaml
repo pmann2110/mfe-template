@@ -343,6 +343,9 @@ importers:
       '@repo/rbac':
         specifier: workspace:*
         version: link:../rbac
+      '@repo/ui':
+        specifier: workspace:*
+        version: link:../ui
       next-auth:
         specifier: ^5.0.0-beta.25
         version: 5.0.0-beta.30(next@15.5.9(@babel/core@7.27.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)

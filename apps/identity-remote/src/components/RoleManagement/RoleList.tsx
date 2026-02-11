@@ -1,8 +1,15 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Button,
+} from '@repo/ui';
 import type { OrgRole } from '@repo/api-contracts';
-import { Shield } from 'lucide-react';
+import { Shield, Plus, Pencil, Trash2 } from 'lucide-react';
 import { useShellStore } from '@repo/stores';
 import { useIdentityMode } from '../../context/IdentityModeContext';
 import { isUserInSystemOrg, SYSTEM_ORG_ID } from '../../data/mock-identity';
@@ -48,13 +55,10 @@ export function RoleList({
           </CardDescription>
         </div>
         {canWrite && (
-          <button
-            type="button"
-            onClick={onCreate}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
+          <Button onClick={onCreate} size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
             Add role
-          </button>
+          </Button>
         )}
       </CardHeader>
       <CardContent>
@@ -83,20 +87,24 @@ export function RoleList({
                 </div>
                 {showEditDelete(role) && (
                   <div className="flex gap-2">
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => onEdit(role)}
-                      className="text-sm text-primary hover:underline"
+                      className="gap-1 text-primary"
                     >
+                      <Pencil className="h-3.5 w-3.5" />
                       Edit
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => onDelete(role)}
-                      className="text-sm text-destructive hover:underline"
+                      className="gap-1 text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >
+                      <Trash2 className="h-3.5 w-3.5" />
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
